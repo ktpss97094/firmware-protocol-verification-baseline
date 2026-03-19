@@ -79,7 +79,7 @@
 #define TWI_FLAG_SUSPEND(flags)             (flags & NRFX_TWI_FLAG_SUSPEND)
 #define TWI_FLAG_NO_HANDLER_IN_USE(flags)   (flags & NRFX_TWI_FLAG_NO_XFER_EVT_HANDLER)
 
-#define HW_TIMEOUT      100000
+#define HW_TIMEOUT      5
 
 #if !NRFX_API_VER_AT_LEAST(4, 1, 0)
 /* TWI master driver suspend types. */

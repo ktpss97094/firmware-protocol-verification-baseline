@@ -6,6 +6,7 @@
 ## Project Structure
 
 * `nrf52840/lib/nrfx`: A **git subtree** of the [nrfx](https://github.com/NordicSemiconductor/nrfx) repository
+* `stm32f429/lib/stm32f4xx-hal-driver`: A **git subtree** of the [stm32f4xx-hal-driver](https://github.com/STMicroelectronics/stm32f4xx-hal-driver) repository
 
 ## Verify
 

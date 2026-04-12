@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -32,6 +33,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define CBMC_TIMEOUT 5
+#define CBMC_SIZE 1
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,7 +53,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-// extern bool nondet_bool(void);
+extern bool nondet_bool(void);
 extern unsigned int nondet_uint(void);
 /* USER CODE END PFP */
 
@@ -72,30 +75,74 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+//   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  /* init() */
+  hi2c1.Instance = I2C1;
+  hi2c1.State = HAL_I2C_STATE_READY;
+  hi2c1.Lock = HAL_UNLOCKED;
+  hi2c1.PreviousState = ((uint32_t)(HAL_I2C_MODE_NONE));
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   /* USER CODE END Init */
 
   /* Configure the system clock */
-  SystemClock_Config();
+//   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_I2C1_Init();
+//   MX_GPIO_Init();
+//   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  /* Symbolic Initialization */
-  uint8_t data[3];
-  for (int i = 0; i < 3; i++) {
+  uint8_t data[65536];
+  for (int i = 0; i < CBMC_SIZE; i++) {
       data[i] = nondet_uint() & 0xFF;
   }
 
+  /*
+   * * Producer Vector
+   *    每次讀取 index += 非負整數 non-deterministic。當超過 vector 長度時，non-deterministic 選擇 infinitely recurring V_x[recur, *] 的值中其中一個
+   *    > e.g., BUSY bit 的 infinitely recurring = {0, 1}
+   *    > SysTick 的 infinitely recurring = {Tickstart + 6, Tickstart + 7, ...} (因為 (HAL_GetTick() - Tickstart) > Timeout 在滿足之後因為 SysTick 為單調遞增，條件會變成無限次滿足，所以 infinitely recurring 就是這些滿足條件的值)
+   * * 一個迴圈的 Sufficient BMC Bound B(v) = CBMC 需 unwind 此迴圈的數
+   *    計算方式為 Code 5.4: 即為 max(所有此迴圈內互相 independent 的迴圈的 B(v)) * 外層迴圈的 B(v)
+   *    針對 monotonic variable 會透過 p120 fitness value 的說明計算: B_x 即為 fitness value
+   * 
+   * * SysTick
+   *    為 non-wrap-around monotonic variable，透過 Table 5.2 計算 fitness value
+   *    > e.g., (HAL_GetTick() - Tickstart) > Timeout，對應 Table 5.2，predicate 為 x > C、update pattern 為 x += A (C = Tickstart + Timeout、A = 1、B = Tickstart)，若 Timeout 為 5，計算出 fitness value = 6
+   *    > producer vector = {Tickstart, Tickstart + 1, ..., Tickstart + <fitness value>}
+   *    > unwind 次數即為 producer vector 的長度
+   *
+   * * CR1 
+   *    * POS: 初始值 non-deterministic
+   *        因為 HAL_I2C_Master_Transmit() 讀取 POS 前並沒有寫入 POS，所以會將這個讀取值溯源到 V_INIT，故初始值為 non-deterministic
+   *    * START: non-deterministic
+   *    * STOP: non-deterministic
+   * 
+   * * DR
+   *    transmitter mode: 不用管
+   *    receiver mode: produder vector = {0x00, ..., 0xFF}
+   *        hardware producer, firmware consumer
+   * 
+   * * SR1
+   *    * SB: non-deterministic
+   *    * ADD10: non-deterministic
+   *    * AF: non-deterministic
+   *    * ADDR: non-deterministic
+   *    * TxE: non-deterministic
+   *    * BTF: non-deterministic
+   *    * ARLO: non-deterministic
+   * 
+   * * SR2
+   *    * BUSY: non-deterministic
+   */
+
   /* FUV */
-  HAL_StatusTypeDef result = HAL_I2C_Master_Transmit(&hi2c1, nondet_uint() & 0xFFFF, data, nondet_uint() & 0x3, 5);
+  HAL_StatusTypeDef result = HAL_I2C_Master_Transmit(&hi2c1, nondet_uint() & 0xFFFF, data, CBMC_SIZE, CBMC_TIMEOUT);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -217,74 +264,127 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-FlagStatus Stub_I2C_Get_Flag(I2C_HandleTypeDef *hi2c, uint32_t Flag) {
-    // uwTick++;  // ARM SysTick，由於 FUV 內所有等待行為都一定會呼叫這個函式，所以可以這樣抽象化
+uint32_t GetRegister(__IO uint32_t *reg_addr)
+{
+  uint32_t output = *reg_addr;
+  uint32_t offset = (uint32_t)reg_addr & 0x3FF;
+
+  switch (offset) {
+    // CR1
+    case offsetof(I2C_TypeDef, CR1):  
+      // POS
+      output = (output & ~I2C_CR1_POS) | (nondet_bool() ? I2C_CR1_POS : 0);
+
+      // START
+      output = (output & ~I2C_CR1_START) | (nondet_bool() ? I2C_CR1_START : 0);
+
+      // STOP
+      output = (output & ~I2C_CR1_STOP) | (nondet_bool() ? I2C_CR1_STOP : 0);
+
+      __CPROVER_assume((output & I2C_CR1_PE) == I2C_CR1_PE);
+      __CPROVER_assume((output & I2C_CR1_SWRST) != I2C_CR1_SWRST);
+
+      break;
     
-    /*
-    switch (Flag) {
-        case I2C_FLAG_ADDR:
-            // ADDR_vs.check_counter++;
+    case offsetof(I2C_TypeDef, SR1):
+      // SB
+      output = (output & ~I2C_SR1_SB) | (nondet_bool() ? I2C_SR1_SB : 0);
 
-            // if (ADDR_vs.check_counter > MAX_MODEL_CHECK_RETRIES) {
-            //     uwTick += 10000;  // 強制 timeout
-            //     return RESET;
-            // }
+      // ADD10
+      output = (output & ~I2C_SR1_ADD10) | (nondet_bool() ? I2C_SR1_ADD10 : 0);
 
-            // if (nondet_bool()) {
-            //     ADDR_vs.flag_set = true;
-            //     return SET;
-            // }
-            // return RESET;
+      // AF
+      output = (output & ~I2C_SR1_AF) | (nondet_bool() ? I2C_SR1_AF : 0);
 
-        case I2C_FLAG_TXE:
-            // TxE_vs.check_counter++;
-            // TxE_vs.max_check_counter = MAX(TxE_vs.check_counter, TxE_vs.max_check_counter);
+      // ADDR
+      output = (output & ~I2C_SR1_ADDR) | (nondet_bool() ? I2C_SR1_ADDR : 0);
 
-            // if (TxE_vs.check_counter > MAX_MODEL_CHECK_RETRIES) {
-            //     uwTick += 10000;  // 強制 timeout
-            //     return RESET;
-            // }
+      // TxE
+      output = (output & ~I2C_SR1_TXE) | (nondet_bool() ? I2C_SR1_TXE : 0);
 
-            // if (nondet_bool()) {
-            //     TxE_vs.flag_set = true;
-            //     TxE_vs.check_counter = 0;
-            //     return SET;
-            // }
-            // return RESET;
+      // BTF
+      output = (output & ~I2C_SR1_BTF) | (nondet_bool() ? I2C_SR1_BTF : 0);
 
-        case I2C_FLAG_BTF:
-            // BTF_vs.check_counter++;
-            // BTF_vs.max_check_counter = MAX(BTF_vs.check_counter, BTF_vs.max_check_counter);
+      // ARLO
+      output = (output & ~I2C_SR1_ARLO) | (nondet_bool() ? I2C_SR1_ARLO : 0);
 
-            // if (BTF_vs.check_counter > MAX_MODEL_CHECK_RETRIES) {
-            //     uwTick += 10000;  // 強制 timeout
-            //     return RESET;
-            // }
+      break;
 
-            // if (nondet_bool()) {
-            //     BTF_vs.flag_set = true;
-            //     TxE_vs.check_counter = 0;
-            //     return SET;
-            // }
-            // return RESET;
+    case offsetof(I2C_TypeDef, SR2):
+      // BUSY
+      output = (output & ~I2C_SR2_BUSY) | (nondet_bool() ? I2C_SR2_BUSY : 0);
 
-        case I2C_FLAG_SB:
-        case I2C_FLAG_ADD10:
-            // return SET;
-        
-        case I2C_FLAG_BUSY:
-        case I2C_FLAG_AF:
-            // return RESET;
+      break;
+  }
 
-        default:  // 沒有用到的 flag
-            // return nondet_bool() ? SET : RESET;
-    }
-    */
+  return output;
 }
-#ifdef __HAL_I2C_GET_FLAG
-#undef __HAL_I2C_GET_FLAG
-#define __HAL_I2C_GET_FLAG(__HANDLE__, __FLAG__) Stub_I2C_Get_Flag(__HANDLE__, __FLAG__)
-#endif
+
+void stub_SET_BIT(__IO uint32_t *REG_addr, uint32_t BIT)
+{
+  *REG_addr = GetRegister(REG_addr) | BIT;
+}
+
+void stub_CLEAR_BIT(__IO uint32_t *REG_addr, uint32_t BIT)
+{
+  *REG_addr = GetRegister(REG_addr) & ~BIT;
+}
+
+uint32_t stub_READ_BIT(__IO uint32_t *REG_addr, uint32_t BIT)
+{
+  return GetRegister(REG_addr) & BIT;
+}
+
+FlagStatus stub_HAL_I2C_GET_FLAG(I2C_HandleTypeDef *__HANDLE__, uint32_t __FLAG__)
+{
+  return (((uint8_t)((__FLAG__) >> 16U)) == 0x01U) ? (((GetRegister(&((__HANDLE__)->Instance->SR1)) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET) : (((GetRegister(&((__HANDLE__)->Instance->SR1)) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET);
+}
+
+void stub_HAL_I2C_CLEAR_ADDRFLAG(I2C_HandleTypeDef *__HANDLE__)
+{
+  do {
+    __IO uint32_t tmpreg = 0x00U;
+    tmpreg = GetRegister(&((__HANDLE__)->Instance->SR1));
+    tmpreg = GetRegister(&((__HANDLE__)->Instance->SR2));
+    UNUSED(tmpreg);
+  } while(0);
+}
+
+uint32_t HAL_GetTick(void)
+{
+  static unsigned int idx = 0;
+  static uint32_t tickstart;
+  static bool first_call = true;
+
+  if (first_call) {  // 第一次呼叫 HAL_GetTick() 是取得 tickstart
+    first_call = false;
+    tickstart = nondet_uint();
+    uwTick = tickstart;
+    return uwTick;
+  }
+
+  /* Fitness Value */
+  const int A = 1, B = tickstart, C = tickstart + CBMC_TIMEOUT;
+  const int fitness_value = (B - C) > 0 ? 1 : ((C - B) / A) + 1;  // Table 5.2
+  
+  /* Producer Vector V_x */
+  const unsigned int V_x_len = fitness_value + 1;
+
+  /* Infinitely Recurring Values V_x[recur, *] */
+  int V_x_recur = tickstart + fitness_value + nondet_uint();
+
+  idx += nondet_uint();
+
+  if (idx < V_x_len) {
+    unsigned int V_x = tickstart + idx * A;
+    uwTick = V_x;
+  }
+  else {
+    uwTick = V_x_recur;
+  }
+
+  return uwTick;
+}
 /* USER CODE END 4 */
 
 /**

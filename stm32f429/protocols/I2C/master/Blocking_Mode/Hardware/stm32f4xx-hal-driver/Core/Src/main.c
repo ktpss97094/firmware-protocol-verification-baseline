@@ -33,8 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CBMC_TIMEOUT 5
-#define CBMC_SIZE 1
+#define CBMC_SIZE 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -59,7 +58,7 @@ extern unsigned int nondet_uint(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint32_t CBMC_TIMEOUT = nondet_uint();
 /* USER CODE END 0 */
 
 /**

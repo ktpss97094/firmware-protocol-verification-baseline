@@ -33,7 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CBMC_SIZE 0
+#define CBMC_SIZE 2
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -96,7 +96,7 @@ int main(void)
 //   MX_GPIO_Init();
 //   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t data[65536];
+  uint8_t data[CBMC_SIZE];
   for (int i = 0; i < CBMC_SIZE; i++) {
       data[i] = nondet_uint() & 0xFF;
   }

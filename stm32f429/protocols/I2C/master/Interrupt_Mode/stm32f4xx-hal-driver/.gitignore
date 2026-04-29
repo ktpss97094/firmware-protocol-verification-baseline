@@ -1,0 +1,4 @@
+# STM32CubeMX
+Makefile
+startup_*.s
+*.ld

@@ -23,7 +23,6 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,7 +32,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define VERIFY_EV
+// #define VERIFY_ER
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -44,6 +44,8 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
 /* USER CODE END PV */
 
@@ -51,15 +53,14 @@ I2C_HandleTypeDef hi2c1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-extern bool nondet_bool(void);
 extern unsigned int nondet_uint(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint16_t CBMC_SIZE = 0;
-uint32_t CBMC_TIMEOUT = nondet_uint();
 /* USER CODE END 0 */
 
 /**
@@ -96,62 +97,45 @@ int main(void)
   /* Initialize all configured peripherals */
 //   MX_GPIO_Init();
 //   MX_I2C1_Init();
+//   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   uint8_t data[CBMC_SIZE];
   for (int i = 0; i < CBMC_SIZE; i++) {
       data[i] = nondet_uint() & 0xFF;
   }
 
-  /*
-   * * Producer Vector
-   *    每次讀取 index += 非負整數 non-deterministic。當超過 vector 長度時，non-deterministic 選擇 infinitely recurring V_x[recur, *] 的值中其中一個
-   *    > e.g., BUSY bit 的 infinitely recurring = {0, 1}
-   *    > SysTick 的 infinitely recurring = {Tickstart + 6, Tickstart + 7, ...} (因為 (HAL_GetTick() - Tickstart) > Timeout 在滿足之後因為 SysTick 為單調遞增，條件會變成無限次滿足，所以 infinitely recurring 就是這些滿足條件的值)
-   * * 一個迴圈的 Sufficient BMC Bound B(v) = CBMC 需 unwind 此迴圈的數
-   *    計算方式為 Code 5.4: 即為 max(所有此迴圈內互相 independent 的迴圈的 B(v)) * 外層迴圈的 B(v)
-   *    針對 monotonic variable 會透過 p120 fitness value 的說明計算: B_x 即為 fitness value
-   * 
-   * * SysTick
-   *    為 non-wrap-around monotonic variable，透過 Table 5.2 計算 fitness value
-   *    > e.g., (HAL_GetTick() - Tickstart) > Timeout，對應 Table 5.2，predicate 為 x > C、update pattern 為 x += A (C = Tickstart + Timeout、A = 1、B = Tickstart)，若 Timeout 為 5，計算出 fitness value = 6
-   *    > producer vector = {Tickstart, Tickstart + 1, ..., Tickstart + <fitness value>}
-   *    > unwind 次數即為 producer vector 的長度
-   *
-   * * CR1 
-   *    * POS: 初始值 non-deterministic
-   *        因為 HAL_I2C_Master_Transmit() 讀取 POS 前並沒有寫入 POS，所以會將這個讀取值溯源到 V_INIT，故初始值為 non-deterministic
-   *    * START: non-deterministic
-   *    * STOP: non-deterministic
-   * 
-   * * DR
-   *    transmitter mode: 不用管
-   *    receiver mode: produder vector = {0x00, ..., 0xFF}
-   *        hardware producer, firmware consumer
-   * 
-   * * SR1
-   *    * SB: non-deterministic
-   *    * ADD10: non-deterministic
-   *    * AF: non-deterministic
-   *    * ADDR: non-deterministic
-   *    * TxE: non-deterministic
-   *    * BTF: non-deterministic
-   *    * ARLO: non-deterministic
-   * 
-   * * SR2
-   *    * BUSY: non-deterministic
-   */
-
   /* FUV */
-  HAL_StatusTypeDef result = HAL_I2C_Master_Transmit(&hi2c1, nondet_uint() & 0xFFFF, data, CBMC_SIZE, CBMC_TIMEOUT);
+  HAL_StatusTypeDef result = HAL_I2C_Master_Transmit_IT(&hi2c1, nondet_uint() & 0xFFFF, data, CBMC_SIZE);
+
+#if defined(VERIFY_EV)
+  const int B_F = CBMC_SIZE + 3;
+  for (int k = 0; k < B_F; k++) {
+    if (hi2c1.State == HAL_I2C_STATE_READY) {  // Ahn 的作法需要 manually 指定結束條件
+      break;
+    }
+
+    I2C1_EV_IRQHandler();
+  }
+#elif defined(VERIFY_ER)
+  const int B_F = 1;
+  for (int k = 0; k < B_F; k++) {
+    if (hi2c1.ErrorCode != HAL_I2C_ERROR_NONE) {
+      break;
+    }
+
+    I2C1_ER_IRQHandler();
+  }
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  // while (1) {
+//   while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  // }
+    
+//   }
   /* USER CODE END 3 */
 }
 
@@ -245,6 +229,39 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -256,6 +273,7 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */

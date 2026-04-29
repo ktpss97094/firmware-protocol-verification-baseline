@@ -1,0 +1,15 @@
+{
+    "todohighlight.keywords": [
+        {
+            "text": "REWRITE:",
+            "color": "#000000",
+            "backgroundColor": "yellow",
+        },
+        {
+            "text": "ASSERT:",
+            "color": "#ffffff",
+            "backgroundColor": "purple",
+            "isWholeLine": false,
+        }
+    ],
+}

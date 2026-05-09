@@ -24,7 +24,6 @@
 #include "stm32f4xx_it.h"
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,7 +33,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-// #define VERIFY_ER
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -44,6 +42,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
+DMA_HandleTypeDef hdma_i2c1_tx;
+DMA_HandleTypeDef hdma_i2c1_rx;
 
 /* USER CODE BEGIN PV */
 /* USER CODE END PV */
@@ -51,9 +51,9 @@ I2C_HandleTypeDef hi2c1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-extern bool nondet_bool(void);
 extern unsigned int nondet_uint(void);
 /* USER CODE END PFP */
 
@@ -95,6 +95,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
 //   MX_GPIO_Init();
+//   MX_DMA_Init();
 //   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   uint8_t data[CBMC_SIZE];
@@ -103,21 +104,25 @@ int main(void)
   }
 
   /* FUV */
-  HAL_StatusTypeDef result = HAL_I2C_Master_Transmit_IT(&hi2c1, nondet_uint() & 0xFFFF, data, CBMC_SIZE);
-
-  const int B_F = CBMC_SIZE + 3;
+  HAL_StatusTypeDef result = HAL_I2C_Master_Transmit_DMA(&hi2c1, nondet_uint() & 0xFFFF, data, CBMC_SIZE);
+  
+  const int B_F = 3 + 1;  // 3: SB, ADDR, BTF、1: DMA TC
   for (int k = 0; k < B_F; k++) {
-    if (hi2c1.State == HAL_I2C_STATE_READY || hi2c1.ErrorCode != HAL_I2C_ERROR_NONE) {  // Ahn 的作法需要 manually 指定結束條件
+    if (hi2c1.State == HAL_I2C_STATE_READY || hi2c1.ErrorCode != HAL_I2C_ERROR_NONE) {
       break;
     }
 
-    if (nondet_bool()) {
+    int i = nondet_uint();
+    __CPROVER_assume(i >= 0 && i <= 2);
+    if (i == 0) {
       I2C1_EV_IRQHandler();
     }
-    else {
+    else if (i == 1) {
       I2C1_ER_IRQHandler();
     }
-    
+    else {
+      DMA1_Stream6_IRQHandler();
+    }
   }
   /* USER CODE END 2 */
 
@@ -218,6 +223,25 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+  /* DMA1_Stream6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
 
 }
 

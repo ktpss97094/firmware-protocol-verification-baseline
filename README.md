@@ -17,7 +17,7 @@
 ### STM32F429
 
 ```sh
-cbmc <Src path>/*.c stm32f429/lib/automated-firmware-verification-using-firmware-hardware-interaction-patterns/stm32f4xx-hal-driver/Src/hw.c $(find stm32f429/lib/stm32f4xx-hal-driver/Src -maxdepth 1 -name "*.c" ! -name "*template.c") -I <Inc path> -I stm32f429/protocols/I2C/master/Blocking_Mode/Hardware/stm32f4xx-hal-driver/Core/Inc -I stm32f429/lib/stm32f4xx-hal-driver/Inc -I stm32f429/lib/cmsis-device-f4/Include -I stm32f429/lib/CMSIS_5/CMSIS/Core/Include -DSTM32F429xx -DUSE_HAL_DRIVER --arch arm --32 --no-standard-checks --drop-unused-functions --unwindset I2C_WaitOnFlagUntilTimeout.1:3,I2C_WaitOnMasterAddressFlagUntilTimeout.2:3,I2C_WaitOnTXEFlagUntilTimeout.1:3,I2C_WaitOnBTFFlagUntilTimeout.1:3
+cbmc <Src path>/*.c stm32f429/lib/automated-firmware-verification-using-firmware-hardware-interaction-patterns/stm32f4xx-hal-driver/Src/hw.c $(find stm32f429/lib/stm32f4xx-hal-driver/Src -maxdepth 1 -name "*.c" ! -name "*template.c") -I <Inc path> -I stm32f429/lib/automated-firmware-verification-using-firmware-hardware-interaction-patterns/stm32f4xx-hal-driver/Inc -I stm32f429/lib/stm32f4xx-hal-driver/Inc -I stm32f429/lib/cmsis-device-f4/Include -I stm32f429/lib/CMSIS_5/CMSIS/Core/Include -DSTM32F429xx -DUSE_HAL_DRIVER --arch arm --32 --no-standard-checks --drop-unused-functions --unwindset I2C_WaitOnFlagUntilTimeout.1:3,I2C_WaitOnMasterAddressFlagUntilTimeout.2:3,I2C_WaitOnTXEFlagUntilTimeout.1:3,I2C_WaitOnBTFFlagUntilTimeout.1:3
 ```
 
 ### nRF52840

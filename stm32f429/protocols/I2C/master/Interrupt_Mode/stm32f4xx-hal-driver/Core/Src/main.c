@@ -117,7 +117,6 @@ int main(void)
     else {
       I2C1_ER_IRQHandler();
     }
-    
   }
   /* USER CODE END 2 */
 

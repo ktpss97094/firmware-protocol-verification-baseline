@@ -53,8 +53,11 @@ uint32_t GetRegister(__IO uint32_t *reg_addr)
       break;
 
     case offsetof(I2C_TypeDef, SR2):
-      // BUSY
-      output = (output & ~I2C_SR2_BUSY) | (nondet_bool() ? I2C_SR2_BUSY : 0);
+      // TRA
+      output = (output & ~I2C_SR2_TRA) | (nondet_bool() ? I2C_SR2_TRA : 0);
+
+      // MSL
+      output = (output & ~I2C_SR2_MSL) | (nondet_bool() ? I2C_SR2_MSL : 0);
 
       break;
   }

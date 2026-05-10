@@ -26,6 +26,11 @@ uint32_t HAL_GetTick(void);
 #define READ_BIT(REG, BIT) stub_READ_BIT(&(REG), BIT)
 #endif
 
+#ifdef READ_REG
+#undef READ_REG
+#define READ_REG(REG) GetRegister(&(REG))
+#endif
+
 #ifdef __HAL_I2C_GET_FLAG
 #undef __HAL_I2C_GET_FLAG
 #define __HAL_I2C_GET_FLAG(__HANDLE__, __FLAG__) stub_HAL_I2C_GET_FLAG(__HANDLE__, __FLAG__)

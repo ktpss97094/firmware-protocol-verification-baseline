@@ -1200,7 +1200,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -1454,7 +1455,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Transmit(I2C_HandleTypeDef *hi2c, uint8_t *pData
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -1586,7 +1588,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Receive(I2C_HandleTypeDef *hi2c, uint8_t *pData,
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1) & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -1718,6 +1721,7 @@ HAL_StatusTypeDef HAL_I2C_Master_Transmit_IT(I2C_HandleTypeDef *hi2c, uint16_t D
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
     if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
@@ -1796,7 +1800,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive_IT(I2C_HandleTypeDef *hi2c, uint16_t De
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -1864,7 +1869,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Transmit_IT(I2C_HandleTypeDef *hi2c, uint8_t *pD
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -1926,7 +1932,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Receive_IT(I2C_HandleTypeDef *hi2c, uint8_t *pDa
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -2004,7 +2011,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint16_t 
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -2161,7 +2169,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive_DMA(I2C_HandleTypeDef *hi2c, uint16_t D
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -2303,7 +2312,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint8_t *p
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -2417,7 +2427,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Receive_DMA(I2C_HandleTypeDef *hi2c, uint8_t *pD
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -2541,7 +2552,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Write(I2C_HandleTypeDef *hi2c, uint16_t DevAddress
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -2669,7 +2681,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -2935,7 +2948,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Write_IT(I2C_HandleTypeDef *hi2c, uint16_t DevAddr
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -3021,7 +3035,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read_IT(I2C_HandleTypeDef *hi2c, uint16_t DevAddre
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -3117,7 +3132,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Write_DMA(I2C_HandleTypeDef *hi2c, uint16_t DevAdd
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -3298,7 +3314,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read_DMA(I2C_HandleTypeDef *hi2c, uint16_t DevAddr
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -3482,7 +3499,8 @@ HAL_StatusTypeDef HAL_I2C_IsDeviceReady(I2C_HandleTypeDef *hi2c, uint16_t DevAdd
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -3637,7 +3655,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Transmit_IT(I2C_HandleTypeDef *hi2c, uint16
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -3734,7 +3753,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint1
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -3916,7 +3936,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Receive_IT(I2C_HandleTypeDef *hi2c, uint16_
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -4039,7 +4060,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Receive_DMA(I2C_HandleTypeDef *hi2c, uint16
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -4235,7 +4257,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Seq_Transmit_IT(I2C_HandleTypeDef *hi2c, uint8_t
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -4309,7 +4332,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Seq_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint8_
     /* and then toggle the HAL slave RX state to TX state */
     if (hi2c->State == HAL_I2C_STATE_BUSY_RX_LISTEN)
     {
-      if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+      // if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+      if ((GetRegister(&(hi2c->Instance->CR2)) & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)  // REWRITE:
       {
         /* Abort DMA Xfer if any */
         if (hi2c->hdmarx != NULL)
@@ -4331,7 +4355,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Seq_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint8_
     }
     else if (hi2c->State == HAL_I2C_STATE_BUSY_TX_LISTEN)
     {
-      if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+      // if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+      if ((GetRegister(&(hi2c->Instance->CR2)) & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)  // REWRITE:
       {
         CLEAR_BIT(hi2c->Instance->CR2, I2C_CR2_DMAEN);
 
@@ -4357,7 +4382,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Seq_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint8_
     }
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -4475,7 +4501,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Seq_Receive_IT(I2C_HandleTypeDef *hi2c, uint8_t 
     __HAL_LOCK(hi2c);
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -4549,7 +4576,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Seq_Receive_DMA(I2C_HandleTypeDef *hi2c, uint8_t
     /* and then toggle the HAL slave RX state to TX state */
     if (hi2c->State == HAL_I2C_STATE_BUSY_RX_LISTEN)
     {
-      if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+      // if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+      if ((GetRegister(&(hi2c->Instance->CR2)) & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)  // REWRITE:
       {
         /* Abort DMA Xfer if any */
         if (hi2c->hdmarx != NULL)
@@ -4571,7 +4599,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Seq_Receive_DMA(I2C_HandleTypeDef *hi2c, uint8_t
     }
     else if (hi2c->State == HAL_I2C_STATE_BUSY_TX_LISTEN)
     {
-      if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+      // if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+      if ((GetRegister(&(hi2c->Instance->CR2)) & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)  // REWRITE:
       {
         CLEAR_BIT(hi2c->Instance->CR2, I2C_CR2_DMAEN);
 
@@ -4597,7 +4626,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Seq_Receive_DMA(I2C_HandleTypeDef *hi2c, uint8_t
     }
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -4702,7 +4732,8 @@ HAL_StatusTypeDef HAL_I2C_EnableListen_IT(I2C_HandleTypeDef *hi2c)
     hi2c->State = HAL_I2C_STATE_LISTEN;
 
     /* Check if the I2C is already enabled */
-    if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    // if ((hi2c->Instance->CR1 & I2C_CR1_PE) != I2C_CR1_PE)
+    if ((GetRegister(&(hi2c->Instance->CR1)) & I2C_CR1_PE) != I2C_CR1_PE)  // REWRITE:
     {
       /* Enable I2C peripheral */
       __HAL_I2C_ENABLE(hi2c);
@@ -5951,7 +5982,8 @@ static void I2C_Master_ADDR(I2C_HandleTypeDef *hi2c)
           /* Disable Acknowledge */
           CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
-          if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+          // // if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+          if ((GetRegister(&(hi2c->Instance->CR2)) & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)  // REWRITE:
           {
             /* Disable Acknowledge */
             CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
@@ -6016,7 +6048,8 @@ static void I2C_Master_ADDR(I2C_HandleTypeDef *hi2c)
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
         }
 
-        if (((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN) && ((CurrentXferOptions == I2C_NO_OPTION_FRAME) || (CurrentXferOptions == I2C_FIRST_FRAME) || (CurrentXferOptions == I2C_FIRST_AND_LAST_FRAME) || (CurrentXferOptions == I2C_LAST_FRAME_NO_STOP) || (CurrentXferOptions == I2C_LAST_FRAME)))
+        // if (((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN) && ((CurrentXferOptions == I2C_NO_OPTION_FRAME) || (CurrentXferOptions == I2C_FIRST_FRAME) || (CurrentXferOptions == I2C_FIRST_AND_LAST_FRAME) || (CurrentXferOptions == I2C_LAST_FRAME_NO_STOP) || (CurrentXferOptions == I2C_LAST_FRAME)))
+        if (((GetRegister(&(hi2c->Instance->CR2)) & I2C_CR2_DMAEN) == I2C_CR2_DMAEN) && ((CurrentXferOptions == I2C_NO_OPTION_FRAME) || (CurrentXferOptions == I2C_FIRST_FRAME) || (CurrentXferOptions == I2C_FIRST_AND_LAST_FRAME) || (CurrentXferOptions == I2C_LAST_FRAME_NO_STOP) || (CurrentXferOptions == I2C_LAST_FRAME)))  // REWRITE:
         {
           /* Enable Last DMA bit */
           SET_BIT(hi2c->Instance->CR2, I2C_CR2_LAST);
@@ -6030,7 +6063,8 @@ static void I2C_Master_ADDR(I2C_HandleTypeDef *hi2c)
         /* Enable Acknowledge */
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
-        if (((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN) && ((CurrentXferOptions == I2C_NO_OPTION_FRAME) || (CurrentXferOptions == I2C_FIRST_FRAME) || (CurrentXferOptions == I2C_FIRST_AND_LAST_FRAME) || (CurrentXferOptions == I2C_LAST_FRAME_NO_STOP) || (CurrentXferOptions == I2C_LAST_FRAME)))
+        // if (((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN) && ((CurrentXferOptions == I2C_NO_OPTION_FRAME) || (CurrentXferOptions == I2C_FIRST_FRAME) || (CurrentXferOptions == I2C_FIRST_AND_LAST_FRAME) || (CurrentXferOptions == I2C_LAST_FRAME_NO_STOP) || (CurrentXferOptions == I2C_LAST_FRAME)))
+        if (((GetRegister(&(hi2c->Instance->CR2)) & I2C_CR2_DMAEN) == I2C_CR2_DMAEN) && ((CurrentXferOptions == I2C_NO_OPTION_FRAME) || (CurrentXferOptions == I2C_FIRST_FRAME) || (CurrentXferOptions == I2C_FIRST_AND_LAST_FRAME) || (CurrentXferOptions == I2C_LAST_FRAME_NO_STOP) || (CurrentXferOptions == I2C_LAST_FRAME)))  // REWRITE:
         {
           /* Enable Last DMA bit */
           SET_BIT(hi2c->Instance->CR2, I2C_CR2_LAST);
@@ -6250,7 +6284,8 @@ static void I2C_Slave_STOPF(I2C_HandleTypeDef *hi2c)
   CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
   /* If a DMA is ongoing, Update handle size context */
-  if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+  // if ((hi2c->Instance->CR2 & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
+  if ((GetRegister(&(hi2c->Instance->CR2)) & I2C_CR2_DMAEN) == I2C_CR2_DMAEN)  // REWRITE:
   {
     if ((CurrentState == HAL_I2C_STATE_BUSY_RX) || (CurrentState == HAL_I2C_STATE_BUSY_RX_LISTEN))
     {

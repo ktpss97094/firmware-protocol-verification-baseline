@@ -1,5 +1,5 @@
-#ifndef __HW_H
-#define __HW_H
+#ifndef __I2C_H
+#define __I2C_H
 
 #include "stm32f4xx_hal.h"
 
@@ -41,4 +41,4 @@ uint32_t HAL_GetTick(void);
 #define __HAL_I2C_CLEAR_ADDRFLAG(__HANDLE__) stub_HAL_I2C_CLEAR_ADDRFLAG(__HANDLE__)
 #endif
 
-#endif /* __HW_H */
+#endif /* __I2C_H */

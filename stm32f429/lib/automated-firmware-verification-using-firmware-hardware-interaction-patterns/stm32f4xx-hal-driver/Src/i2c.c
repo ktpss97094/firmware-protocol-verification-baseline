@@ -1,4 +1,4 @@
-#include "hw.h"
+#include "i2c.h"
 #include <stdbool.h>
 
 extern bool nondet_bool(void);

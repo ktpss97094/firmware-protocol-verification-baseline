@@ -107,7 +107,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "main.h"
-#include "gpio.h"
+#include "stm32f4xx_hal_driver.h"
+#include <stdbool.h>
 extern bool arbitration_lost, arbitration_lost_byte_end;
 
 /** @addtogroup STM32F4xx_HAL_Driver
@@ -424,8 +425,10 @@ void HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
   }
   else
   {
-    __CPROVER_assert((((uint32_t)GPIO_Pin << 16U) & SW_I2C_SDA_Pin == 0) || (!arbitration_lost), "read_back_verification (spec 1) violation");  // ASSERT:
-    __CPROVER_assert((((uint32_t)GPIO_Pin << 16U) & SW_I2C_SCL_Pin == 0) || (!arbitration_lost_byte_end), "read_back_verification (spec 2) violation");  // ASSERT:
+#if defined(SW_I2C_SCL_Pin) && defined(SW_I2C_SDA_Pin)
+    __CPROVER_assert((!(((uint32_t)GPIO_Pin << 16U) & ((uint32_t)SW_I2C_SDA_Pin << 16U))) || (!arbitration_lost), "read_back_verification (spec 1) violation");  // ASSERT:
+    __CPROVER_assert((!(((uint32_t)GPIO_Pin << 16U) & ((uint32_t)SW_I2C_SCL_Pin << 16U))) || (!arbitration_lost_byte_end), "read_back_verification (spec 2) violation");  // ASSERT:
+#endif
     // GPIOx->BSRR = (uint32_t)GPIO_Pin << 16U;
     SetRegister(&(GPIOx->BSRR), (uint32_t)GPIO_Pin << 16U);  // REWRITE:
   }

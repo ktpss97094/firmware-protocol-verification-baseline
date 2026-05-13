@@ -51,11 +51,12 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
+extern unsigned int nondet_uint(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t CBMC_SIZE = 0;
+uint8_t CBMC_SIZE = 1;
 /* USER CODE END 0 */
 
 /**
@@ -82,7 +83,6 @@ int main(void)
   /* USER CODE BEGIN SysInit */
   I2C_init();
   DWT_Delay_Init();
-  DWT_Delay_us(1000);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -104,7 +104,7 @@ int main(void)
   // }
 
   /* FUV */
-  bool result = I2C_transmit(nondet_uint() & 0xFF, data, 1);
+  bool result = I2C_transmit(nondet_uint() & 0xFF, data, CBMC_SIZE);
   /* USER CODE END 3 */
 }
 

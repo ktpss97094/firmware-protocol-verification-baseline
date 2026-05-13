@@ -1,9 +1,13 @@
-#ifndef __I2C_H
-#define __I2C_H
+#ifndef __AUTOMATED_FIRMWARE_VERIFICATION_USING_FIRMWARE_HARDWARE_INTERACTION_PATTERNS_STM32F4XX_HAL_DRIVER_HW_H
+#define __AUTOMATED_FIRMWARE_VERIFICATION_USING_FIRMWARE_HARDWARE_INTERACTION_PATTERNS_STM32F4XX_HAL_DRIVER_HW_H
 
 #include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_i2c.h"
+
+void _CalcBaseOffset(uint32_t, uint32_t *, uint32_t *);
 
 uint32_t GetRegister(__IO uint32_t *);
+void SetRegister(__IO uint32_t *, uint32_t);
 void stub_SET_BIT(__IO uint32_t *, uint32_t);
 void stub_CLEAR_BIT(__IO uint32_t *, uint32_t);
 uint32_t stub_READ_BIT(__IO uint32_t *, uint32_t);
@@ -41,4 +45,4 @@ uint32_t HAL_GetTick(void);
 #define __HAL_I2C_CLEAR_ADDRFLAG(__HANDLE__) stub_HAL_I2C_CLEAR_ADDRFLAG(__HANDLE__)
 #endif
 
-#endif /* __I2C_H */
+#endif /* __AUTOMATED_FIRMWARE_VERIFICATION_USING_FIRMWARE_HARDWARE_INTERACTION_PATTERNS_STM32F4XX_HAL_DRIVER_HW_H */

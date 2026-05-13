@@ -26,7 +26,8 @@ uint32_t DWT_Delay_Init(void) {
   __ASM volatile ("NOP");
 
   /* Check if clock cycle counter has started */
-     if(DWT->CYCCNT)
+    //  if(DWT->CYCCNT)
+     if(GetCYCCNT(0))  // REWRITE:
      {
        return 0; /*clock cycle counter started*/
      }

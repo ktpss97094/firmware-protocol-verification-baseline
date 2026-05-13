@@ -300,7 +300,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "main.h"
-#include "i2c.h"
+#include "stm32f4xx_hal_driver.h"
 
 /** @addtogroup STM32F4xx_HAL_Driver
   * @{

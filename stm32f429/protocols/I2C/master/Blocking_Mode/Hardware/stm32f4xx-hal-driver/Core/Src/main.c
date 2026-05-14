@@ -82,7 +82,6 @@ int main(void)
   hi2c1.Instance = I2C1;
   hi2c1.State = HAL_I2C_STATE_READY;
   hi2c1.Lock = HAL_UNLOCKED;
-  hi2c1.PreviousState = ((uint32_t)(HAL_I2C_MODE_NONE));
   hi2c1.Init.AddressingMode = nondet_uint();
   /* USER CODE END Init */
 

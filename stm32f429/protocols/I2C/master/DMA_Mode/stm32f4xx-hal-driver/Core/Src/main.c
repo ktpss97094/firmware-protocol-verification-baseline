@@ -82,8 +82,11 @@ int main(void)
   hi2c1.Instance = I2C1;
   hi2c1.State = HAL_I2C_STATE_READY;
   hi2c1.Lock = HAL_UNLOCKED;
-  hi2c1.PreviousState = ((uint32_t)(HAL_I2C_MODE_NONE));
   hi2c1.Init.AddressingMode = nondet_uint();
+  hi2c1.hdmatx = &hdma_i2c1_tx;
+  hdma_i2c1_tx.Instance = DMA1_Stream6;
+  hdma_i2c1_tx.State = HAL_DMA_STATE_READY;
+  hdma_i2c1_tx.Lock = HAL_UNLOCKED;
   /* USER CODE END Init */
 
   /* Configure the system clock */

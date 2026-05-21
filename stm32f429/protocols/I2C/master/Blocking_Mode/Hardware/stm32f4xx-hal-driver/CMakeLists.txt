@@ -2,4 +2,17 @@ project(i2c_master_blocking_hw_hal C)
 
 set(CBMC_FLAGS "${CBMC_FLAGS} --unwindset I2C_WaitOnFlagUntilTimeout.1:3,I2C_WaitOnMasterAddressFlagUntilTimeout.2:3,I2C_WaitOnTXEFlagUntilTimeout.1:3,I2C_WaitOnBTFFlagUntilTimeout.1:3")
 
+file(GLOB CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/*.c")
+add_executable(${PROJECT_NAME}
+    ${CORE_SOURCES}
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    stm32f4xx_hal_automated_firmware_verification_using_firmware_hardware_interaction_patterns
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc"
+)
+
 add_firmware(${PROJECT_NAME})

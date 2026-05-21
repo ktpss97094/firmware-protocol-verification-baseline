@@ -54,25 +54,18 @@ target_link_libraries(stm32_bitbang_i2c_automated_firmware_verification_using_fi
     stm32_bitbang_i2c
 )
 
-ExternalProject_Add(
-    libopencm3_build
-    PREFIX "${CMAKE_BINARY_DIR}/libopencm3"
-    SOURCE_DIR "${LIB_DIR}/libopencm3"
-    BUILD_IN_SOURCE 1
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND make TARGETS=stm32/f4
-    INSTALL_COMMAND ""
-    BUILD_BYPRODUCTS "${LIB_DIR}/libopencm3/lib/libopencm3_stm32f4.a"
-    BUILD_ALWAYS 1
+set(LIBOPENCM3_F4_SOURCES
+    "${LIB_DIR}/libopencm3/lib/stm32/common/gpio_common_all.c"
+    "${LIB_DIR}/libopencm3/lib/stm32/common/gpio_common_f0234.c"
+    "${LIB_DIR}/libopencm3/lib/stm32/common/i2c_common_v1.c"
+    "${LIB_DIR}/libopencm3/lib/stm32/common/rcc_common_all.c"
+    "${LIB_DIR}/libopencm3/lib/stm32/f4/rcc.c"
 )
-add_library(libopencm3 STATIC IMPORTED GLOBAL)
-add_dependencies(libopencm3 libopencm3_build)
-set_target_properties(libopencm3 PROPERTIES
-    IMPORTED_LOCATION "${LIB_DIR}/libopencm3/lib/libopencm3_stm32f4.a"
-    INTERFACE_INCLUDE_DIRECTORIES "${LIB_DIR}/libopencm3/include"
-    INTERFACE_LINK_OPTIONS "-L${LIB_DIR}/libopencm3/lib"
-    INTERFACE_COMPILE_DEFINITIONS "STM32F4"
-)
+
+add_library(libopencm3 INTERFACE)
+target_sources(libopencm3 INTERFACE ${LIBOPENCM3_F4_SOURCES})
+target_include_directories(libopencm3 INTERFACE "${LIB_DIR}/libopencm3/include")
+target_compile_definitions(libopencm3 INTERFACE STM32F4)
 target_link_libraries(libopencm3 INTERFACE cortex_m4_flags)
 
 add_library(libopencm3_automated_firmware_verification_using_firmware_hardware_interaction_patterns INTERFACE)
@@ -106,6 +99,7 @@ function(add_firmware TARGET_NAME)
 endfunction()
 
 add_subdirectory(protocols/I2C/master/Blocking_Mode/Hardware/stm32f4xx-hal-driver)
+add_subdirectory(protocols/I2C/master/Blocking_Mode/Hardware/libopencm3)
 add_subdirectory(protocols/I2C/master/Blocking_Mode/Software/stm32_bitbang_i2c)
 add_subdirectory(protocols/I2C/master/Interrupt_Mode/stm32f4xx-hal-driver)
 add_subdirectory(protocols/I2C/master/DMA_Mode/stm32f4xx-hal-driver)

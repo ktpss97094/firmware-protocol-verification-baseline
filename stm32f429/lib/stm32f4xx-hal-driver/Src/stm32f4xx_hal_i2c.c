@@ -299,7 +299,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-#include "main.h"
+
 #include "stm32f4xx_hal_driver.h"
 
 /** @addtogroup STM32F4xx_HAL_Driver
@@ -503,8 +503,10 @@ HAL_StatusTypeDef HAL_I2C_Init(I2C_HandleTypeDef *hi2c)
   __HAL_I2C_DISABLE(hi2c);
 
   /*Reset I2C*/
-  hi2c->Instance->CR1 |= I2C_CR1_SWRST;
-  hi2c->Instance->CR1 &= ~I2C_CR1_SWRST;
+  // hi2c->Instance->CR1 |= I2C_CR1_SWRST;
+  SetRegister(&(hi2c->Instance->CR1), GetRegister(&(hi2c->Instance->CR1)) | I2C_CR1_SWRST);  // REWRITE:
+  // hi2c->Instance->CR1 &= ~I2C_CR1_SWRST;
+  SetRegister(&(hi2c->Instance->CR1), GetRegister(&(hi2c->Instance->CR1)) & ~I2C_CR1_SWRST);  // REWRITE:
 
   /* Get PCLK1 frequency */
   pclk1 = HAL_RCC_GetPCLK1Freq();
@@ -963,8 +965,8 @@ static void I2C_Flush_DR(I2C_HandleTypeDef *hi2c)
   /* Write a dummy data in DR to clear TXE flag */
   if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_TXE) != RESET)
   {
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = 0x00U;
+    // hi2c->Instance->DR = 0x00U;
+    SetRegister(&(hi2c->Instance->DR), 0x00U);  // REWRITE:
   }
 }
 
@@ -1110,15 +1112,14 @@ HAL_StatusTypeDef HAL_I2C_Master_Transmit(I2C_HandleTypeDef *hi2c, uint16_t DevA
         if (hi2c->ErrorCode == HAL_I2C_ERROR_AF)
         {
           /* Generate Stop */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
         }
         return HAL_ERROR;
       }
 
       /* Write data to DR */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = *hi2c->pBuffPtr;
+      // hi2c->Instance->DR = *hi2c->pBuffPtr;
+      SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -1130,8 +1131,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Transmit(I2C_HandleTypeDef *hi2c, uint16_t DevA
       if ((__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BTF) == SET) && (hi2c->XferSize != 0U))
       {
         /* Write data to DR */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-        hi2c->Instance->DR = *hi2c->pBuffPtr;
+        // hi2c->Instance->DR = *hi2c->pBuffPtr;
+        SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
         /* Increment Buffer pointer */
         hi2c->pBuffPtr++;
@@ -1147,7 +1148,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Transmit(I2C_HandleTypeDef *hi2c, uint16_t DevA
         if (hi2c->ErrorCode == HAL_I2C_ERROR_AF)
         {
           /* Generate Stop */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
         }
         return HAL_ERROR;
@@ -1155,7 +1155,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Transmit(I2C_HandleTypeDef *hi2c, uint16_t DevA
     }
 
     /* Generate Stop */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
     hi2c->State = HAL_I2C_STATE_READY;
@@ -1232,7 +1231,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
       __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
     }
     else if (hi2c->XferSize == 1U)
@@ -1244,7 +1242,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
       __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
     }
     else if (hi2c->XferSize == 2U)
@@ -1281,7 +1278,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
           }
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -1300,11 +1298,11 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
           }
 
           /* Generate Stop */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -1314,7 +1312,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
           hi2c->XferCount--;
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -1336,7 +1335,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
           CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -1352,11 +1352,11 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
           }
 
           /* Generate Stop */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -1366,7 +1366,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
           hi2c->XferCount--;
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -1385,7 +1386,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
         }
 
         /* Read data from DR */
-        *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
         /* Increment Buffer pointer */
         hi2c->pBuffPtr++;
@@ -1404,7 +1406,8 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAd
           }
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -1512,8 +1515,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Transmit(I2C_HandleTypeDef *hi2c, uint8_t *pData
       }
 
       /* Write data to DR */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = *hi2c->pBuffPtr;
+      // hi2c->Instance->DR = *hi2c->pBuffPtr;
+      SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -1525,8 +1528,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Transmit(I2C_HandleTypeDef *hi2c, uint8_t *pData
       if ((__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BTF) == SET) && (hi2c->XferSize != 0U))
       {
         /* Write data to DR */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-        hi2c->Instance->DR = *hi2c->pBuffPtr;
+        // hi2c->Instance->DR = *hi2c->pBuffPtr;
+        SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
         /* Increment Buffer pointer */
         hi2c->pBuffPtr++;
@@ -1632,7 +1635,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Receive(I2C_HandleTypeDef *hi2c, uint8_t *pData,
       }
 
       /* Read data from DR */
-      *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -1644,7 +1648,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Receive(I2C_HandleTypeDef *hi2c, uint8_t *pData,
       if ((__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BTF) == SET) && (hi2c->XferSize != 0U))
       {
         /* Read data from DR */
-        *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
         /* Increment Buffer pointer */
         hi2c->pBuffPtr++;
@@ -1752,7 +1757,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Transmit_IT(I2C_HandleTypeDef *hi2c, uint16_t D
     __HAL_I2C_ENABLE_IT(hi2c, I2C_IT_EVT | I2C_IT_BUF | I2C_IT_ERR);
 
     /* Generate Start */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
     return HAL_OK;
@@ -1836,7 +1840,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive_IT(I2C_HandleTypeDef *hi2c, uint16_t De
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
     /* Generate Start */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
     return HAL_OK;
@@ -2085,7 +2088,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint16_t 
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
         /* Generate Start */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
       }
       else
@@ -2109,7 +2111,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint16_t 
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
       /* Generate Start */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
       /* Process Unlocked */
@@ -2230,7 +2231,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive_DMA(I2C_HandleTypeDef *hi2c, uint16_t D
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
         /* Generate Start */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
         /* Process Unlocked */
@@ -2277,7 +2277,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Receive_DMA(I2C_HandleTypeDef *hi2c, uint16_t D
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
       /* Generate Start */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
     }
 
@@ -2379,7 +2378,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint8_t *p
       __HAL_I2C_ENABLE_IT(hi2c, I2C_IT_EVT | I2C_IT_ERR);
 
       /* Enable DMA Request */
-      hi2c->Instance->CR2 |= I2C_CR2_DMAEN;
+      // hi2c->Instance->CR2 |= I2C_CR2_DMAEN;
+      SetRegister(&(hi2c->Instance->CR2), GetRegister(&(hi2c->Instance->CR2)) | I2C_CR2_DMAEN);  // REWRITE:
 
       return HAL_OK;
     }
@@ -2586,15 +2586,14 @@ HAL_StatusTypeDef HAL_I2C_Mem_Write(I2C_HandleTypeDef *hi2c, uint16_t DevAddress
         if (hi2c->ErrorCode == HAL_I2C_ERROR_AF)
         {
           /* Generate Stop */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
         }
         return HAL_ERROR;
       }
 
       /* Write data to DR */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = *hi2c->pBuffPtr;
+      // hi2c->Instance->DR = *hi2c->pBuffPtr;
+      SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -2606,8 +2605,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Write(I2C_HandleTypeDef *hi2c, uint16_t DevAddress
       if ((__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BTF) == SET) && (hi2c->XferSize != 0U))
       {
         /* Write data to DR */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-        hi2c->Instance->DR = *hi2c->pBuffPtr;
+        // hi2c->Instance->DR = *hi2c->pBuffPtr;
+        SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
         /* Increment Buffer pointer */
         hi2c->pBuffPtr++;
@@ -2624,14 +2623,12 @@ HAL_StatusTypeDef HAL_I2C_Mem_Write(I2C_HandleTypeDef *hi2c, uint16_t DevAddress
       if (hi2c->ErrorCode == HAL_I2C_ERROR_AF)
       {
         /* Generate Stop */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
       }
       return HAL_ERROR;
     }
 
     /* Generate Stop */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
     hi2c->State = HAL_I2C_STATE_READY;
@@ -2713,7 +2710,6 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
       __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
     }
     else if (hi2c->XferSize == 1U)
@@ -2725,7 +2721,6 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
       __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
     }
     else if (hi2c->XferSize == 2U)
@@ -2759,7 +2754,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
           }
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -2778,11 +2774,11 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
           }
 
           /* Generate Stop */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -2792,7 +2788,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
           hi2c->XferCount--;
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -2814,7 +2811,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
           CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -2830,11 +2828,11 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
           }
 
           /* Generate Stop */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -2844,7 +2842,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
           hi2c->XferCount--;
 
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -2863,7 +2862,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
         }
 
         /* Read data from DR */
-        *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
         /* Increment Buffer pointer */
         hi2c->pBuffPtr++;
@@ -2880,7 +2880,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
             CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
           }
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -2973,7 +2974,6 @@ HAL_StatusTypeDef HAL_I2C_Mem_Write_IT(I2C_HandleTypeDef *hi2c, uint16_t DevAddr
     hi2c->EventCount  = 0U;
 
     /* Generate Start */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
     /* Process Unlocked */
@@ -3063,7 +3063,6 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read_IT(I2C_HandleTypeDef *hi2c, uint16_t DevAddre
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
     /* Generate Start */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
     /* Process Unlocked */
@@ -3422,7 +3421,8 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read_DMA(I2C_HandleTypeDef *hi2c, uint16_t DevAddr
         __HAL_I2C_ENABLE_IT(hi2c, I2C_IT_ERR);
 
         /* Enable DMA Request */
-        hi2c->Instance->CR2 |= I2C_CR2_DMAEN;
+        // hi2c->Instance->CR2 |= I2C_CR2_DMAEN;
+        SetRegister(&(hi2c->Instance->CR2), GetRegister(&(hi2c->Instance->CR2)) | I2C_CR2_DMAEN);  // REWRITE:
       }
       else
       {
@@ -3451,7 +3451,6 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read_DMA(I2C_HandleTypeDef *hi2c, uint16_t DevAddr
       __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
       hi2c->State = HAL_I2C_STATE_READY;
@@ -3516,7 +3515,6 @@ HAL_StatusTypeDef HAL_I2C_IsDeviceReady(I2C_HandleTypeDef *hi2c, uint16_t DevAdd
     do
     {
       /* Generate Start */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
       /* Wait until SB flag is set */
@@ -3530,8 +3528,8 @@ HAL_StatusTypeDef HAL_I2C_IsDeviceReady(I2C_HandleTypeDef *hi2c, uint16_t DevAdd
       }
 
       /* Send slave address */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(DevAddress);
+      // hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(DevAddress);
+      SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_WRITE(DevAddress));  // REWRITE:
 
       /* Wait until ADDR or AF flag are set */
       /* Get tick */
@@ -3555,7 +3553,6 @@ HAL_StatusTypeDef HAL_I2C_IsDeviceReady(I2C_HandleTypeDef *hi2c, uint16_t DevAdd
       if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ADDR) == SET)
       {
         /* Generate Stop */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
         /* Clear ADDR Flag */
@@ -3577,7 +3574,6 @@ HAL_StatusTypeDef HAL_I2C_IsDeviceReady(I2C_HandleTypeDef *hi2c, uint16_t DevAdd
       else
       {
         /* Generate Stop */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
         /* Clear AF Flag */
@@ -3683,7 +3679,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Transmit_IT(I2C_HandleTypeDef *hi2c, uint16
     if ((Prev_State != I2C_STATE_MASTER_BUSY_TX) || (IS_I2C_TRANSFER_OTHER_OPTIONS_REQUEST(XferOptions) == 1))
     {
       /* Generate Start */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
     }
 
@@ -3818,7 +3813,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint1
         if ((Prev_State != I2C_STATE_MASTER_BUSY_TX) || (IS_I2C_TRANSFER_OTHER_OPTIONS_REQUEST(XferOptions) == 1))
         {
           /* Generate Start */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
         }
 
@@ -3865,7 +3859,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint1
       if ((Prev_State != I2C_STATE_MASTER_BUSY_TX) || (IS_I2C_TRANSFER_OTHER_OPTIONS_REQUEST(XferOptions) == 1))
       {
         /* Generate Start */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
       }
 
@@ -3989,7 +3982,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Receive_IT(I2C_HandleTypeDef *hi2c, uint16_
     if ((Prev_State != I2C_STATE_MASTER_BUSY_RX) || (IS_I2C_TRANSFER_OTHER_OPTIONS_REQUEST(XferOptions) == 1))
     {
       /* Generate Start */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
     }
 
@@ -4154,7 +4146,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Receive_DMA(I2C_HandleTypeDef *hi2c, uint16
         if ((Prev_State != I2C_STATE_MASTER_BUSY_RX) || (IS_I2C_TRANSFER_OTHER_OPTIONS_REQUEST(XferOptions) == 1))
         {
           /* Generate Start */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
           /* Update interrupt for only EVT and ERR */
@@ -4209,7 +4200,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Seq_Receive_DMA(I2C_HandleTypeDef *hi2c, uint16
       if ((Prev_State != I2C_STATE_MASTER_BUSY_RX) || (IS_I2C_TRANSFER_OTHER_OPTIONS_REQUEST(XferOptions) == 1))
       {
         /* Generate Start */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
       }
 
@@ -4450,7 +4440,8 @@ HAL_StatusTypeDef HAL_I2C_Slave_Seq_Transmit_DMA(I2C_HandleTypeDef *hi2c, uint8_
       __HAL_I2C_ENABLE_IT(hi2c, I2C_IT_EVT | I2C_IT_ERR);
 
       /* Enable DMA Request */
-      hi2c->Instance->CR2 |= I2C_CR2_DMAEN;
+      // hi2c->Instance->CR2 |= I2C_CR2_DMAEN;
+      SetRegister(&(hi2c->Instance->CR2), GetRegister(&(hi2c->Instance->CR2)) | I2C_CR2_DMAEN);  // REWRITE:
 
       return HAL_OK;
     }
@@ -4816,7 +4807,6 @@ HAL_StatusTypeDef HAL_I2C_Master_Abort_IT(I2C_HandleTypeDef *hi2c, uint16_t DevA
     CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
     /* Generate Stop */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
     hi2c->XferCount = 0U;
@@ -5077,7 +5067,6 @@ void HAL_I2C_ER_IRQHandler(I2C_HandleTypeDef *hi2c)
       if ((CurrentMode == HAL_I2C_MODE_MASTER) || (CurrentMode == HAL_I2C_MODE_MEM))
       {
         /* Generate Stop */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
       }
     }
@@ -5363,7 +5352,6 @@ static void I2C_MasterTransmit_TXE(I2C_HandleTypeDef *hi2c)
       __HAL_I2C_DISABLE_IT(hi2c, I2C_IT_EVT | I2C_IT_BUF | I2C_IT_ERR);
 
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
       hi2c->PreviousState = I2C_STATE_NONE;
@@ -5406,8 +5394,8 @@ static void I2C_MasterTransmit_TXE(I2C_HandleTypeDef *hi2c)
       else
       {
         /* Write data to DR */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-        hi2c->Instance->DR = *hi2c->pBuffPtr;
+        // hi2c->Instance->DR = *hi2c->pBuffPtr;
+        SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
         /* Increment Buffer pointer */
         hi2c->pBuffPtr++;
@@ -5439,8 +5427,8 @@ static void I2C_MasterTransmit_BTF(I2C_HandleTypeDef *hi2c)
     if (hi2c->XferCount != 0U)
     {
       /* Write data to DR */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = *hi2c->pBuffPtr;
+      // hi2c->Instance->DR = *hi2c->pBuffPtr;
+      SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -5471,7 +5459,6 @@ static void I2C_MasterTransmit_BTF(I2C_HandleTypeDef *hi2c)
         __HAL_I2C_DISABLE_IT(hi2c, I2C_IT_EVT | I2C_IT_BUF | I2C_IT_ERR);
 
         /* Generate Stop */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
         hi2c->PreviousState = I2C_STATE_NONE;
@@ -5521,8 +5508,8 @@ static void I2C_MemoryTransmit_TXE_BTF(I2C_HandleTypeDef *hi2c)
     if (hi2c->MemaddSize == I2C_MEMADD_SIZE_8BIT)
     {
       /* Send Memory Address */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = I2C_MEM_ADD_LSB(hi2c->Memaddress);
+      // hi2c->Instance->DR = I2C_MEM_ADD_LSB(hi2c->Memaddress);
+      SetRegister(&(hi2c->Instance->DR), I2C_MEM_ADD_LSB(hi2c->Memaddress));  // REWRITE:
 
       hi2c->EventCount += 2U;
     }
@@ -5530,8 +5517,8 @@ static void I2C_MemoryTransmit_TXE_BTF(I2C_HandleTypeDef *hi2c)
     else
     {
       /* Send MSB of Memory Address */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = I2C_MEM_ADD_MSB(hi2c->Memaddress);
+      // hi2c->Instance->DR = I2C_MEM_ADD_MSB(hi2c->Memaddress);
+      SetRegister(&(hi2c->Instance->DR), I2C_MEM_ADD_MSB(hi2c->Memaddress));  // REWRITE:
 
       hi2c->EventCount++;
     }
@@ -5539,8 +5526,8 @@ static void I2C_MemoryTransmit_TXE_BTF(I2C_HandleTypeDef *hi2c)
   else if (hi2c->EventCount == 1U)
   {
     /* Send LSB of Memory Address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_MEM_ADD_LSB(hi2c->Memaddress);
+    // hi2c->Instance->DR = I2C_MEM_ADD_LSB(hi2c->Memaddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_MEM_ADD_LSB(hi2c->Memaddress));  // REWRITE:
 
     hi2c->EventCount++;
   }
@@ -5549,16 +5536,16 @@ static void I2C_MemoryTransmit_TXE_BTF(I2C_HandleTypeDef *hi2c)
     if (CurrentState == HAL_I2C_STATE_BUSY_RX)
     {
       /* Generate Restart */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
-      hi2c->Instance->CR1 |= I2C_CR1_START;
+      // hi2c->Instance->CR1 |= I2C_CR1_START;
+      SetRegister(&(hi2c->Instance->CR1), GetRegister(&(hi2c->Instance->CR1)) | I2C_CR1_START);  // REWRITE:
 
       hi2c->EventCount++;
     }
     else if ((hi2c->XferCount > 0U) && (CurrentState == HAL_I2C_STATE_BUSY_TX))
     {
       /* Write data to DR */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = *hi2c->pBuffPtr;
+      // hi2c->Instance->DR = *hi2c->pBuffPtr;
+      SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -5573,7 +5560,6 @@ static void I2C_MemoryTransmit_TXE_BTF(I2C_HandleTypeDef *hi2c)
       __HAL_I2C_DISABLE_IT(hi2c, I2C_IT_EVT | I2C_IT_BUF | I2C_IT_ERR);
 
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
       hi2c->PreviousState = I2C_STATE_NONE;
@@ -5615,7 +5601,8 @@ static void I2C_MasterReceive_RXNE(I2C_HandleTypeDef *hi2c)
     if (tmp > 3U)
     {
       /* Read data from DR */
-      *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -5642,7 +5629,8 @@ static void I2C_MasterReceive_RXNE(I2C_HandleTypeDef *hi2c)
         __HAL_I2C_DISABLE_IT(hi2c, I2C_IT_EVT | I2C_IT_BUF | I2C_IT_ERR);
 
         /* Read data from DR */
-        *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
         /* Increment Buffer pointer */
         hi2c->pBuffPtr++;
@@ -5688,7 +5676,8 @@ static void I2C_MasterReceive_RXNE(I2C_HandleTypeDef *hi2c)
         __HAL_I2C_DISABLE_IT(hi2c, I2C_IT_EVT | I2C_IT_BUF | I2C_IT_ERR);
 
         /* Read data from DR */
-        *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+        *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
         /* Increment Buffer pointer */
         hi2c->pBuffPtr++;
@@ -5734,7 +5723,8 @@ static void I2C_MasterReceive_BTF(I2C_HandleTypeDef *hi2c)
     __HAL_I2C_DISABLE_IT(hi2c, I2C_IT_BUF);
 
     /* Read data from DR */
-    *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
     /* Increment Buffer pointer */
     hi2c->pBuffPtr++;
@@ -5755,7 +5745,8 @@ static void I2C_MasterReceive_BTF(I2C_HandleTypeDef *hi2c)
     }
 
     /* Read data from DR */
-    *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
     /* Increment Buffer pointer */
     hi2c->pBuffPtr++;
@@ -5779,12 +5770,12 @@ static void I2C_MasterReceive_BTF(I2C_HandleTypeDef *hi2c)
     else
     {
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
     }
 
     /* Read data from DR */
-    *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
     /* Increment Buffer pointer */
     hi2c->pBuffPtr++;
@@ -5793,7 +5784,8 @@ static void I2C_MasterReceive_BTF(I2C_HandleTypeDef *hi2c)
     hi2c->XferCount--;
 
     /* Read data from DR */
-    *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
     /* Increment Buffer pointer */
     hi2c->pBuffPtr++;
@@ -5836,7 +5828,8 @@ static void I2C_MasterReceive_BTF(I2C_HandleTypeDef *hi2c)
   else
   {
     /* Read data from DR */
-    *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
     /* Increment Buffer pointer */
     hi2c->pBuffPtr++;
@@ -5859,13 +5852,13 @@ static void I2C_Master_SB(I2C_HandleTypeDef *hi2c)
     if (hi2c->EventCount == 0U)
     {
       /* Send slave address */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(hi2c->Devaddress);
+      // hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(hi2c->Devaddress);
+      SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_WRITE(hi2c->Devaddress));  // REWRITE:
     }
     else
     {
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-      hi2c->Instance->DR = I2C_7BIT_ADD_READ(hi2c->Devaddress);
+      // hi2c->Instance->DR = I2C_7BIT_ADD_READ(hi2c->Devaddress);
+      SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_READ(hi2c->Devaddress));  // REWRITE:
     }
   }
   else
@@ -5875,13 +5868,13 @@ static void I2C_Master_SB(I2C_HandleTypeDef *hi2c)
       /* Send slave 7 Bits address */
       if (hi2c->State == HAL_I2C_STATE_BUSY_TX)
       {
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-        hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(hi2c->Devaddress);
+        // hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(hi2c->Devaddress);
+        SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_WRITE(hi2c->Devaddress));  // REWRITE:
       }
       else
       {
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-        hi2c->Instance->DR = I2C_7BIT_ADD_READ(hi2c->Devaddress);
+        // hi2c->Instance->DR = I2C_7BIT_ADD_READ(hi2c->Devaddress);
+        SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_READ(hi2c->Devaddress));  // REWRITE:
       }
 
       if (((hi2c->hdmatx != NULL) && (hi2c->hdmatx->XferCpltCallback != NULL))
@@ -5896,14 +5889,14 @@ static void I2C_Master_SB(I2C_HandleTypeDef *hi2c)
       if (hi2c->EventCount == 0U)
       {
         /* Send header of slave address */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-        hi2c->Instance->DR = I2C_10BIT_HEADER_WRITE(hi2c->Devaddress);
+        // hi2c->Instance->DR = I2C_10BIT_HEADER_WRITE(hi2c->Devaddress);
+        SetRegister(&(hi2c->Instance->DR), I2C_10BIT_HEADER_WRITE(hi2c->Devaddress));  // REWRITE:
       }
       else if (hi2c->EventCount == 1U)
       {
         /* Send header of slave address */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-        hi2c->Instance->DR = I2C_10BIT_HEADER_READ(hi2c->Devaddress);
+        // hi2c->Instance->DR = I2C_10BIT_HEADER_READ(hi2c->Devaddress);
+        SetRegister(&(hi2c->Instance->DR), I2C_10BIT_HEADER_READ(hi2c->Devaddress));  // REWRITE:
       }
       else
       {
@@ -5922,8 +5915,8 @@ static void I2C_Master_SB(I2C_HandleTypeDef *hi2c)
 static void I2C_Master_ADD10(I2C_HandleTypeDef *hi2c)
 {
   /* Send slave address */
-  __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-  hi2c->Instance->DR = I2C_10BIT_ADDRESS(hi2c->Devaddress);
+  // hi2c->Instance->DR = I2C_10BIT_ADDRESS(hi2c->Devaddress);
+  SetRegister(&(hi2c->Instance->DR), I2C_10BIT_ADDRESS(hi2c->Devaddress));  // REWRITE:
 
   if (((hi2c->hdmatx != NULL) && (hi2c->hdmatx->XferCpltCallback != NULL))
       || ((hi2c->hdmarx != NULL) && (hi2c->hdmarx->XferCpltCallback != NULL)))
@@ -5959,7 +5952,6 @@ static void I2C_Master_ADDR(I2C_HandleTypeDef *hi2c)
       __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
       /* Generate Restart */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
       hi2c->EventCount++;
@@ -5972,7 +5964,6 @@ static void I2C_Master_ADDR(I2C_HandleTypeDef *hi2c)
         __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
         /* Generate Stop */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
       }
       else if (hi2c->XferCount == 1U)
@@ -5997,7 +5988,6 @@ static void I2C_Master_ADDR(I2C_HandleTypeDef *hi2c)
             __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
             /* Generate Stop */
-            __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
             SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
           }
         }
@@ -6028,7 +6018,6 @@ static void I2C_Master_ADDR(I2C_HandleTypeDef *hi2c)
           __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
           /* Generate Stop */
-          __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
           SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
         }
       }
@@ -6099,8 +6088,8 @@ static void I2C_SlaveTransmit_TXE(I2C_HandleTypeDef *hi2c)
   if (hi2c->XferCount != 0U)
   {
     /* Write data to DR */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = *hi2c->pBuffPtr;
+    // hi2c->Instance->DR = *hi2c->pBuffPtr;
+    SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
     /* Increment Buffer pointer */
     hi2c->pBuffPtr++;
@@ -6138,8 +6127,8 @@ static void I2C_SlaveTransmit_BTF(I2C_HandleTypeDef *hi2c)
   if (hi2c->XferCount != 0U)
   {
     /* Write data to DR */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = *hi2c->pBuffPtr;
+    // hi2c->Instance->DR = *hi2c->pBuffPtr;
+    SetRegister(&(hi2c->Instance->DR), *hi2c->pBuffPtr);  // REWRITE:
 
     /* Increment Buffer pointer */
     hi2c->pBuffPtr++;
@@ -6163,7 +6152,8 @@ static void I2C_SlaveReceive_RXNE(I2C_HandleTypeDef *hi2c)
   if (hi2c->XferCount != 0U)
   {
     /* Read data from DR */
-    *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
     /* Increment Buffer pointer */
     hi2c->pBuffPtr++;
@@ -6201,7 +6191,8 @@ static void I2C_SlaveReceive_BTF(I2C_HandleTypeDef *hi2c)
   if (hi2c->XferCount != 0U)
   {
     /* Read data from DR */
-    *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+    *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
     /* Increment Buffer pointer */
     hi2c->pBuffPtr++;
@@ -6352,7 +6343,8 @@ static void I2C_Slave_STOPF(I2C_HandleTypeDef *hi2c)
     if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BTF) == SET)
     {
       /* Read data from DR */
-      *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -6365,7 +6357,8 @@ static void I2C_Slave_STOPF(I2C_HandleTypeDef *hi2c)
     if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_RXNE) == SET)
     {
       /* Read data from DR */
-      *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -6518,7 +6511,8 @@ static void I2C_ITError(I2C_HandleTypeDef *hi2c)
   if (((CurrentMode == HAL_I2C_MODE_MASTER) || (CurrentMode == HAL_I2C_MODE_MEM)) && (CurrentState == HAL_I2C_STATE_BUSY_RX))
   {
     /* Disable Pos bit in I2C CR1 when error occurred in Master/Mem Receive IT Process */
-    hi2c->Instance->CR1 &= ~I2C_CR1_POS;
+    // hi2c->Instance->CR1 &= ~I2C_CR1_POS;
+    SetRegister(&(hi2c->Instance->CR1), GetRegister(&(hi2c->Instance->CR1)) & ~I2C_CR1_POS);  // REWRITE:
   }
 
   if (((uint32_t)CurrentState & (uint32_t)HAL_I2C_STATE_LISTEN) == (uint32_t)HAL_I2C_STATE_LISTEN)
@@ -6542,7 +6536,8 @@ static void I2C_ITError(I2C_HandleTypeDef *hi2c)
   /* Abort DMA transfer */
   if (READ_BIT(hi2c->Instance->CR2, I2C_CR2_DMAEN) == I2C_CR2_DMAEN)
   {
-    hi2c->Instance->CR2 &= ~I2C_CR2_DMAEN;
+    // hi2c->Instance->CR2 &= ~I2C_CR2_DMAEN;
+    SetRegister(&(hi2c->Instance->CR2), GetRegister(&(hi2c->Instance->CR2)) & ~I2C_CR2_DMAEN);  // REWRITE:
 
     if (hi2c->hdmatx->State != HAL_DMA_STATE_READY)
     {
@@ -6573,7 +6568,8 @@ static void I2C_ITError(I2C_HandleTypeDef *hi2c)
         if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_RXNE) == SET)
         {
           /* Read data from DR */
-          *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+          *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
           /* Increment Buffer pointer */
           hi2c->pBuffPtr++;
@@ -6598,7 +6594,8 @@ static void I2C_ITError(I2C_HandleTypeDef *hi2c)
     if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_RXNE) == SET)
     {
       /* Read data from DR */
-      *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -6620,7 +6617,8 @@ static void I2C_ITError(I2C_HandleTypeDef *hi2c)
     if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_RXNE) == SET)
     {
       /* Read data from DR */
-      *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      // *hi2c->pBuffPtr = (uint8_t)hi2c->Instance->DR;
+      *hi2c->pBuffPtr = (uint8_t)GetRegister(&(hi2c->Instance->DR));  // REWRITE:
 
       /* Increment Buffer pointer */
       hi2c->pBuffPtr++;
@@ -6683,13 +6681,11 @@ static HAL_StatusTypeDef I2C_MasterRequestWrite(I2C_HandleTypeDef *hi2c, uint16_
   if ((CurrentXferOptions == I2C_FIRST_AND_LAST_FRAME) || (CurrentXferOptions == I2C_FIRST_FRAME) || (CurrentXferOptions == I2C_NO_OPTION_FRAME))
   {
     /* Generate Start */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
   }
   else if (hi2c->PreviousState == I2C_STATE_MASTER_BUSY_RX)
   {
     /* Generate ReStart */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
   }
   else
@@ -6710,14 +6706,14 @@ static HAL_StatusTypeDef I2C_MasterRequestWrite(I2C_HandleTypeDef *hi2c, uint16_
   if (hi2c->Init.AddressingMode == I2C_ADDRESSINGMODE_7BIT)
   {
     /* Send slave address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(DevAddress);
+    // hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(DevAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_WRITE(DevAddress));  // REWRITE:
   }
   else
   {
     /* Send header of slave address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_10BIT_HEADER_WRITE(DevAddress);
+    // hi2c->Instance->DR = I2C_10BIT_HEADER_WRITE(DevAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_10BIT_HEADER_WRITE(DevAddress));  // REWRITE:
 
     /* Wait until ADD10 flag is set */
     if (I2C_WaitOnMasterAddressFlagUntilTimeout(hi2c, I2C_FLAG_ADD10, Timeout, Tickstart) != HAL_OK)
@@ -6726,8 +6722,8 @@ static HAL_StatusTypeDef I2C_MasterRequestWrite(I2C_HandleTypeDef *hi2c, uint16_
     }
 
     /* Send slave address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_10BIT_ADDRESS(DevAddress);
+    // hi2c->Instance->DR = I2C_10BIT_ADDRESS(DevAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_10BIT_ADDRESS(DevAddress));  // REWRITE:
   }
 
   /* Wait until ADDR flag is set */
@@ -6761,13 +6757,11 @@ static HAL_StatusTypeDef I2C_MasterRequestRead(I2C_HandleTypeDef *hi2c, uint16_t
   if ((CurrentXferOptions == I2C_FIRST_AND_LAST_FRAME) || (CurrentXferOptions == I2C_FIRST_FRAME)  || (CurrentXferOptions == I2C_NO_OPTION_FRAME))
   {
     /* Generate Start */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
   }
   else if (hi2c->PreviousState == I2C_STATE_MASTER_BUSY_TX)
   {
     /* Generate ReStart */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
   }
   else
@@ -6788,14 +6782,14 @@ static HAL_StatusTypeDef I2C_MasterRequestRead(I2C_HandleTypeDef *hi2c, uint16_t
   if (hi2c->Init.AddressingMode == I2C_ADDRESSINGMODE_7BIT)
   {
     /* Send slave address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_7BIT_ADD_READ(DevAddress);
+    // hi2c->Instance->DR = I2C_7BIT_ADD_READ(DevAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_READ(DevAddress));  // REWRITE:
   }
   else
   {
     /* Send header of slave address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_10BIT_HEADER_WRITE(DevAddress);
+    // hi2c->Instance->DR = I2C_10BIT_HEADER_WRITE(DevAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_10BIT_HEADER_WRITE(DevAddress));  // REWRITE:
 
     /* Wait until ADD10 flag is set */
     if (I2C_WaitOnMasterAddressFlagUntilTimeout(hi2c, I2C_FLAG_ADD10, Timeout, Tickstart) != HAL_OK)
@@ -6804,8 +6798,8 @@ static HAL_StatusTypeDef I2C_MasterRequestRead(I2C_HandleTypeDef *hi2c, uint16_t
     }
 
     /* Send slave address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_10BIT_ADDRESS(DevAddress);
+    // hi2c->Instance->DR = I2C_10BIT_ADDRESS(DevAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_10BIT_ADDRESS(DevAddress));  // REWRITE:
 
     /* Wait until ADDR flag is set */
     if (I2C_WaitOnMasterAddressFlagUntilTimeout(hi2c, I2C_FLAG_ADDR, Timeout, Tickstart) != HAL_OK)
@@ -6817,7 +6811,6 @@ static HAL_StatusTypeDef I2C_MasterRequestRead(I2C_HandleTypeDef *hi2c, uint16_t
     __HAL_I2C_CLEAR_ADDRFLAG(hi2c);
 
     /* Generate Restart */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
     SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
     /* Wait until SB flag is set */
@@ -6831,8 +6824,8 @@ static HAL_StatusTypeDef I2C_MasterRequestRead(I2C_HandleTypeDef *hi2c, uint16_t
     }
 
     /* Send header of slave address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_10BIT_HEADER_READ(DevAddress);
+    // hi2c->Instance->DR = I2C_10BIT_HEADER_READ(DevAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_10BIT_HEADER_READ(DevAddress));  // REWRITE:
   }
 
   /* Wait until ADDR flag is set */
@@ -6859,7 +6852,6 @@ static HAL_StatusTypeDef I2C_MasterRequestRead(I2C_HandleTypeDef *hi2c, uint16_t
 static HAL_StatusTypeDef I2C_RequestMemoryWrite(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint32_t Timeout, uint32_t Tickstart)
 {
   /* Generate Start */
-  __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
   SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
   /* Wait until SB flag is set */
@@ -6873,8 +6865,8 @@ static HAL_StatusTypeDef I2C_RequestMemoryWrite(I2C_HandleTypeDef *hi2c, uint16_
   }
 
   /* Send slave address */
-  __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-  hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(DevAddress);
+  // hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(DevAddress);
+  SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_WRITE(DevAddress));  // REWRITE:
 
   /* Wait until ADDR flag is set */
   if (I2C_WaitOnMasterAddressFlagUntilTimeout(hi2c, I2C_FLAG_ADDR, Timeout, Tickstart) != HAL_OK)
@@ -6891,7 +6883,6 @@ static HAL_StatusTypeDef I2C_RequestMemoryWrite(I2C_HandleTypeDef *hi2c, uint16_
     if (hi2c->ErrorCode == HAL_I2C_ERROR_AF)
     {
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
     }
     return HAL_ERROR;
@@ -6901,15 +6892,15 @@ static HAL_StatusTypeDef I2C_RequestMemoryWrite(I2C_HandleTypeDef *hi2c, uint16_
   if (MemAddSize == I2C_MEMADD_SIZE_8BIT)
   {
     /* Send Memory Address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_MEM_ADD_LSB(MemAddress);
+    // hi2c->Instance->DR = I2C_MEM_ADD_LSB(MemAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_MEM_ADD_LSB(MemAddress));  // REWRITE:
   }
   /* If Memory address size is 16Bit */
   else
   {
     /* Send MSB of Memory Address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_MEM_ADD_MSB(MemAddress);
+    // hi2c->Instance->DR = I2C_MEM_ADD_MSB(MemAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_MEM_ADD_MSB(MemAddress));  // REWRITE:
 
     /* Wait until TXE flag is set */
     if (I2C_WaitOnTXEFlagUntilTimeout(hi2c, Timeout, Tickstart) != HAL_OK)
@@ -6917,15 +6908,14 @@ static HAL_StatusTypeDef I2C_RequestMemoryWrite(I2C_HandleTypeDef *hi2c, uint16_
       if (hi2c->ErrorCode == HAL_I2C_ERROR_AF)
       {
         /* Generate Stop */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
       }
       return HAL_ERROR;
     }
 
     /* Send LSB of Memory Address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_MEM_ADD_LSB(MemAddress);
+    // hi2c->Instance->DR = I2C_MEM_ADD_LSB(MemAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_MEM_ADD_LSB(MemAddress));  // REWRITE:
   }
 
   return HAL_OK;
@@ -6949,7 +6939,6 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead(I2C_HandleTypeDef *hi2c, uint16_t
   SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
 
   /* Generate Start */
-  __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
   SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
   /* Wait until SB flag is set */
@@ -6963,8 +6952,8 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead(I2C_HandleTypeDef *hi2c, uint16_t
   }
 
   /* Send slave address */
-  __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-  hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(DevAddress);
+  // hi2c->Instance->DR = I2C_7BIT_ADD_WRITE(DevAddress);
+  SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_WRITE(DevAddress));  // REWRITE:
 
   /* Wait until ADDR flag is set */
   if (I2C_WaitOnMasterAddressFlagUntilTimeout(hi2c, I2C_FLAG_ADDR, Timeout, Tickstart) != HAL_OK)
@@ -6981,7 +6970,6 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead(I2C_HandleTypeDef *hi2c, uint16_t
     if (hi2c->ErrorCode == HAL_I2C_ERROR_AF)
     {
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
     }
     return HAL_ERROR;
@@ -6991,15 +6979,15 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead(I2C_HandleTypeDef *hi2c, uint16_t
   if (MemAddSize == I2C_MEMADD_SIZE_8BIT)
   {
     /* Send Memory Address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_MEM_ADD_LSB(MemAddress);
+    // hi2c->Instance->DR = I2C_MEM_ADD_LSB(MemAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_MEM_ADD_LSB(MemAddress));  // REWRITE:
   }
   /* If Memory address size is 16Bit */
   else
   {
     /* Send MSB of Memory Address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_MEM_ADD_MSB(MemAddress);
+    // hi2c->Instance->DR = I2C_MEM_ADD_MSB(MemAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_MEM_ADD_MSB(MemAddress));  // REWRITE:
 
     /* Wait until TXE flag is set */
     if (I2C_WaitOnTXEFlagUntilTimeout(hi2c, Timeout, Tickstart) != HAL_OK)
@@ -7007,15 +6995,14 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead(I2C_HandleTypeDef *hi2c, uint16_t
       if (hi2c->ErrorCode == HAL_I2C_ERROR_AF)
       {
         /* Generate Stop */
-        __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
         SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
       }
       return HAL_ERROR;
     }
 
     /* Send LSB of Memory Address */
-    __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-    hi2c->Instance->DR = I2C_MEM_ADD_LSB(MemAddress);
+    // hi2c->Instance->DR = I2C_MEM_ADD_LSB(MemAddress);
+    SetRegister(&(hi2c->Instance->DR), I2C_MEM_ADD_LSB(MemAddress));  // REWRITE:
   }
 
   /* Wait until TXE flag is set */
@@ -7024,14 +7011,12 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead(I2C_HandleTypeDef *hi2c, uint16_t
     if (hi2c->ErrorCode == HAL_I2C_ERROR_AF)
     {
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
     }
     return HAL_ERROR;
   }
 
   /* Generate Restart */
-  __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 1) violation");  // ASSERT:
   SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
 
   /* Wait until SB flag is set */
@@ -7045,8 +7030,8 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead(I2C_HandleTypeDef *hi2c, uint16_t
   }
 
   /* Send slave address */
-  __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 2) violation");  // ASSERT:
-  hi2c->Instance->DR = I2C_7BIT_ADD_READ(DevAddress);
+  // hi2c->Instance->DR = I2C_7BIT_ADD_READ(DevAddress);
+  SetRegister(&(hi2c->Instance->DR), I2C_7BIT_ADD_READ(DevAddress));  // REWRITE:
 
   /* Wait until ADDR flag is set */
   if (I2C_WaitOnMasterAddressFlagUntilTimeout(hi2c, I2C_FLAG_ADDR, Timeout, Tickstart) != HAL_OK)
@@ -7141,7 +7126,6 @@ static void I2C_DMAXferCplt(DMA_HandleTypeDef *hdma)
     if ((CurrentXferOptions == I2C_NO_OPTION_FRAME) || (CurrentXferOptions == I2C_FIRST_AND_LAST_FRAME) || (CurrentXferOptions == I2C_OTHER_AND_LAST_FRAME) || (CurrentXferOptions == I2C_LAST_FRAME))
     {
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
     }
 
@@ -7226,7 +7210,8 @@ static void I2C_DMAError(DMA_HandleTypeDef *hdma)
   if (HAL_DMA_GetError(hdma) != HAL_DMA_ERROR_FE)
   {
     /* Disable Acknowledge */
-    hi2c->Instance->CR1 &= ~I2C_CR1_ACK;
+    // hi2c->Instance->CR1 &= ~I2C_CR1_ACK;
+    SetRegister(&(hi2c->Instance->CR1), GetRegister(&(hi2c->Instance->CR1)) & ~I2C_CR1_ACK);  // REWRITE:
 
     hi2c->XferCount = 0U;
 
@@ -7396,7 +7381,6 @@ static HAL_StatusTypeDef I2C_WaitOnMasterAddressFlagUntilTimeout(I2C_HandleTypeD
     if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_AF) == SET)
     {
       /* Generate Stop */
-      __CPROVER_assert(__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_MSL) == RESET || __HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO) == RESET, "read_back_verification (spec 3) violation");  // ASSERT:
       SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
 
       /* Clear AF Flag */

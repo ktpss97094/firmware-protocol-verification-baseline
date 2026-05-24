@@ -7,3 +7,7 @@ indent_size = 2
 [**/stm32_bitbang_i2c/**/*.{c,h}]
 indent_style = space
 indent_size = 2
+
+[stm32f429/lib/automated-firmware-verification-using-firmware-hardware-interaction-patterns/common/*.{c,h}]
+indent_style = space
+indent_size = 2

@@ -7,7 +7,7 @@
 
 extern unsigned int nondet_uint(void);
 
-uint16_t CBMC_SIZE = 0;
+uint16_t CBMC_SIZE = 1;
 
 static void clock_setup(void) {
     rcc_osc_on(RCC_HSI);
@@ -36,11 +36,14 @@ static void i2c_setup(void) {
 int main(void) {
     // clock_setup();
     // i2c_setup();
+    /* init() */
 
     uint8_t data[CBMC_SIZE];
     for (int i = 0; i < CBMC_SIZE; i++) {
         data[i] = nondet_uint() & 0xFF;
     }
+
+    /* FUV */
     i2c_transfer7(I2C_PORT, nondet_uint() & 0xFF, data, CBMC_SIZE, NULL, 0);
 
     // while (1) {}

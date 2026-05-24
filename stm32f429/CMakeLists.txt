@@ -4,7 +4,7 @@ project(firmware C)
 include(ExternalProject)
 
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib")
-set(CBMC_FLAGS "--arch arm --32 --no-standard-checks --drop-unused-functions")
+set(CBMC_FLAGS "--arch arm --32 --no-standard-checks --drop-unused-functions --object-bits 9")
 
 add_library(cortex_m4_flags INTERFACE)
 target_compile_options(cortex_m4_flags INTERFACE ${MCU_FLAGS} -Wall -g)
@@ -16,6 +16,16 @@ target_include_directories(cmsis INTERFACE
     "${LIB_DIR}/cmsis-device-f4/Include"
 )
 target_compile_definitions(cmsis INTERFACE STM32F429xx)
+
+add_library(common_automated_firmware_verification_using_firmware_hardware_interaction_patterns INTERFACE)
+file(GLOB COMMON_AUTOMATED_FIRMWARE_VERIFICATION_USING_FIRMWARE_HARDWARE_INTERACTION_PATTERNS_SOURCES "${LIB_DIR}/automated-firmware-verification-using-firmware-hardware-interaction-patterns/common/*.c")
+target_sources(common_automated_firmware_verification_using_firmware_hardware_interaction_patterns INTERFACE ${COMMON_AUTOMATED_FIRMWARE_VERIFICATION_USING_FIRMWARE_HARDWARE_INTERACTION_PATTERNS_SOURCES})
+target_include_directories(common_automated_firmware_verification_using_firmware_hardware_interaction_patterns INTERFACE
+    "${LIB_DIR}/automated-firmware-verification-using-firmware-hardware-interaction-patterns/common"
+)
+target_link_libraries(common_automated_firmware_verification_using_firmware_hardware_interaction_patterns INTERFACE 
+    cmsis
+)
 
 add_library(stm32f4xx_hal INTERFACE)
 file(GLOB STM32F4XX_HAL_SOURCES "${LIB_DIR}/stm32f4xx-hal-driver/Src/*.c")
@@ -34,6 +44,7 @@ target_include_directories(stm32f4xx_hal_automated_firmware_verification_using_f
     "${LIB_DIR}/automated-firmware-verification-using-firmware-hardware-interaction-patterns/stm32f4xx-hal-driver"
 )
 target_link_libraries(stm32f4xx_hal_automated_firmware_verification_using_firmware_hardware_interaction_patterns INTERFACE 
+    common_automated_firmware_verification_using_firmware_hardware_interaction_patterns
     stm32f4xx_hal
 )
 
@@ -51,19 +62,19 @@ target_include_directories(stm32_bitbang_i2c_automated_firmware_verification_usi
     "${LIB_DIR}/automated-firmware-verification-using-firmware-hardware-interaction-patterns/stm32_bitbang_i2c"
 )
 target_link_libraries(stm32_bitbang_i2c_automated_firmware_verification_using_firmware_hardware_interaction_patterns INTERFACE 
+    common_automated_firmware_verification_using_firmware_hardware_interaction_patterns
     stm32_bitbang_i2c
 )
 
-set(LIBOPENCM3_F4_SOURCES
+add_library(libopencm3 INTERFACE)
+set(LIBOPENCM3_SOURCES
     "${LIB_DIR}/libopencm3/lib/stm32/common/gpio_common_all.c"
     "${LIB_DIR}/libopencm3/lib/stm32/common/gpio_common_f0234.c"
     "${LIB_DIR}/libopencm3/lib/stm32/common/i2c_common_v1.c"
     "${LIB_DIR}/libopencm3/lib/stm32/common/rcc_common_all.c"
     "${LIB_DIR}/libopencm3/lib/stm32/f4/rcc.c"
 )
-
-add_library(libopencm3 INTERFACE)
-target_sources(libopencm3 INTERFACE ${LIBOPENCM3_F4_SOURCES})
+target_sources(libopencm3 INTERFACE ${LIBOPENCM3_SOURCES})
 target_include_directories(libopencm3 INTERFACE "${LIB_DIR}/libopencm3/include")
 target_compile_definitions(libopencm3 INTERFACE STM32F4)
 target_link_libraries(libopencm3 INTERFACE cortex_m4_flags)
@@ -75,6 +86,7 @@ target_include_directories(libopencm3_automated_firmware_verification_using_firm
     "${LIB_DIR}/automated-firmware-verification-using-firmware-hardware-interaction-patterns/libopencm3"
 )
 target_link_libraries(libopencm3_automated_firmware_verification_using_firmware_hardware_interaction_patterns INTERFACE 
+    common_automated_firmware_verification_using_firmware_hardware_interaction_patterns
     libopencm3
 )
 
@@ -87,12 +99,12 @@ function(add_firmware TARGET_NAME)
     separate_arguments(CBMC_FLAGS_LIST NATIVE_COMMAND "${CBMC_FLAGS}")
     add_custom_target(${TARGET_NAME}-verify
         DEPENDS ${TARGET_NAME}
-        COMMAND ${CBMC_TOOL} $<TARGET_FILE_DIR:${TARGET_NAME}>/${CMAKE_PROJECT_NAME}.out ${CBMC_FLAGS_LIST} || true  # 加上 "|| true" 避免 verification failure 時 cbmc 回傳的錯誤碼被 cmake 接收，印出錯誤訊息
+        COMMAND ${CBMC_TOOL} $<TARGET_FILE_DIR:${TARGET_NAME}>/${CMAKE_PROJECT_NAME}.out ${CBMC_FLAGS_LIST} \$$EXTRA_CBMC_FLAGS || true  # 加上 "|| true" 避免 verification failure 時 cbmc 回傳的錯誤碼被 cmake 接收，印出錯誤訊息
         USES_TERMINAL
     )
     add_custom_target(${TARGET_NAME}-show-loops
         DEPENDS ${TARGET_NAME}
-        COMMAND ${CBMC_TOOL} $<TARGET_FILE_DIR:${TARGET_NAME}>/${CMAKE_PROJECT_NAME}.out ${CBMC_FLAGS_LIST} --show-loops
+        COMMAND ${CBMC_TOOL} $<TARGET_FILE_DIR:${TARGET_NAME}>/${CMAKE_PROJECT_NAME}.out ${CBMC_FLAGS_LIST} \$$EXTRA_CBMC_FLAGS --show-loops
         USES_TERMINAL
     )
 

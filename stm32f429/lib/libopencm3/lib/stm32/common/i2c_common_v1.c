@@ -39,6 +39,8 @@ register access, Error conditions
 #include <libopencm3/stm32/i2c.h>
 #include <libopencm3/stm32/rcc.h>
 
+#include "libopencm3.h"
+
 /**@{*/
 
 
@@ -50,7 +52,8 @@ register access, Error conditions
 
 void i2c_peripheral_enable(uint32_t i2c)
 {
-	I2C_CR1(i2c) |= I2C_CR1_PE;
+	// I2C_CR1(i2c) |= I2C_CR1_PE;
+    SetRegister(&(I2C_CR1(i2c)), GetRegister(&(I2C_CR1(i2c))) | (I2C_CR1_PE));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -64,7 +67,8 @@ In Slave mode, the peripheral is disabled only after communication has ended.
 
 void i2c_peripheral_disable(uint32_t i2c)
 {
-	I2C_CR1(i2c) &= ~I2C_CR1_PE;
+	// I2C_CR1(i2c) &= ~I2C_CR1_PE;
+	SetRegister(&(I2C_CR1(i2c)), GetRegister(&(I2C_CR1(i2c))) & (~I2C_CR1_PE));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -79,7 +83,8 @@ when the current bus activity is completed.
 
 void i2c_send_start(uint32_t i2c)
 {
-	I2C_CR1(i2c) |= I2C_CR1_START;
+	// I2C_CR1(i2c) |= I2C_CR1_START;
+	SetRegister(&(I2C_CR1(i2c)), GetRegister(&(I2C_CR1(i2c))) | (I2C_CR1_START));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -93,7 +98,8 @@ mode, or simply release the bus if in Slave mode.
 
 void i2c_send_stop(uint32_t i2c)
 {
-	I2C_CR1(i2c) |= I2C_CR1_STOP;
+	// I2C_CR1(i2c) |= I2C_CR1_STOP;
+	SetRegister(&(I2C_CR1(i2c)), GetRegister(&(I2C_CR1(i2c))) | (I2C_CR1_STOP));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -105,7 +111,8 @@ Clear the "Send Stop" flag in the I2C config register
 */
 void i2c_clear_stop(uint32_t i2c)
 {
-	I2C_CR1(i2c) &= ~I2C_CR1_STOP;
+	// I2C_CR1(i2c) &= ~I2C_CR1_STOP;
+	SetRegister(&(I2C_CR1(i2c)), GetRegister(&(I2C_CR1(i2c))) & (~I2C_CR1_STOP));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -122,7 +129,8 @@ void i2c_set_own_7bit_slave_address(uint32_t i2c, uint8_t slave)
 	uint16_t val = (uint16_t)(slave << 1);
 	/* Datasheet: always keep 1 by software. */
 	val |= (1 << 14);
-	I2C_OAR1(i2c) = val;
+	// I2C_OAR1(i2c) = val;
+	SetRegister(&(I2C_OAR1(i2c)), val);  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -138,7 +146,8 @@ This sets an address for Slave mode operation, in 10 bit form.
 
 void i2c_set_own_10bit_slave_address(uint32_t i2c, uint16_t slave)
 {
-	I2C_OAR1(i2c) = (uint16_t)(I2C_OAR1_ADDMODE | slave);
+	// I2C_OAR1(i2c) = (uint16_t)(I2C_OAR1_ADDMODE | slave);
+	SetRegister(&(I2C_OAR1(i2c)), (uint16_t)(I2C_OAR1_ADDMODE | slave));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -154,7 +163,8 @@ This sets a secondary address for Slave mode operation, in 7 bit form.
 void i2c_set_own_7bit_slave_address_two(uint32_t i2c, uint8_t slave)
 {
 	uint16_t val = (uint16_t)(slave << 1);
-	I2C_OAR2(i2c) = val;
+	// I2C_OAR2(i2c) = val;
+	SetRegister(&(I2C_OAR2(i2c)), val);  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -167,7 +177,8 @@ Both OAR1 and OAR2 are recognised in 7-bit addressing mode.
 
 void i2c_enable_dual_addressing_mode(uint32_t i2c)
 {
-	I2C_OAR2(i2c) |= I2C_OAR2_ENDUAL;
+	// I2C_OAR2(i2c) |= I2C_OAR2_ENDUAL;
+	SetRegister(&(I2C_OAR2(i2c)), GetRegister(&(I2C_OAR2(i2c))) | (I2C_OAR2_ENDUAL));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -180,7 +191,8 @@ Only OAR1 is recognised in 7-bit addressing mode.
 
 void i2c_disable_dual_addressing_mode(uint32_t i2c)
 {
-	I2C_OAR2(i2c) &= ~(I2C_OAR2_ENDUAL);
+	// I2C_OAR2(i2c) &= ~(I2C_OAR2_ENDUAL);
+	SetRegister(&(I2C_OAR2(i2c)), GetRegister(&(I2C_OAR2(i2c))) & (~(I2C_OAR2_ENDUAL)));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -199,9 +211,11 @@ i2c_set_ccr
 void i2c_set_clock_frequency(uint32_t i2c, uint8_t freq)
 {
 	uint16_t reg16;
-	reg16 = I2C_CR2(i2c) & 0xffc0; /* Clear bits [5:0]. */
+	// reg16 = I2C_CR2(i2c) & 0xffc0; /* Clear bits [5:0]. */
+	reg16 = GetRegister(&(I2C_CR2(i2c))) & 0xffc0; /* Clear bits [5:0]. */  // REWRITE:
 	reg16 |= freq;
-	I2C_CR2(i2c) = reg16;
+	// I2C_CR2(i2c) = reg16;
+	SetRegister(&(I2C_CR2(i2c)), reg16);  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -213,7 +227,8 @@ void i2c_set_clock_frequency(uint32_t i2c, uint8_t freq)
 
 void i2c_send_data(uint32_t i2c, uint8_t data)
 {
-	I2C_DR(i2c) = data;
+	// I2C_DR(i2c) = data;
+	SetRegister(&(I2C_DR(i2c)), data);  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -227,7 +242,8 @@ clock frequency must be set with @ref i2c_set_clock_frequency
 
 void i2c_set_fast_mode(uint32_t i2c)
 {
-	I2C_CCR(i2c) |= I2C_CCR_FS;
+	// I2C_CCR(i2c) |= I2C_CCR_FS;
+	SetRegister(&(I2C_CCR(i2c)), GetRegister(&(I2C_CCR(i2c))) | (I2C_CCR_FS));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -241,7 +257,8 @@ actual clock frequency must be set with @ref i2c_set_clock_frequency
 
 void i2c_set_standard_mode(uint32_t i2c)
 {
-	I2C_CCR(i2c) &= ~I2C_CCR_FS;
+	// I2C_CCR(i2c) &= ~I2C_CCR_FS;
+	SetRegister(&(I2C_CCR(i2c)), GetRegister(&(I2C_CCR(i2c))) & (~I2C_CCR_FS));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -262,9 +279,11 @@ of the CCR field. It is a divisor of the peripheral clock frequency
 void i2c_set_ccr(uint32_t i2c, uint16_t freq)
 {
 	uint16_t reg16;
-	reg16 = I2C_CCR(i2c) & 0xf000; /* Clear bits [11:0]. */
+	// reg16 = I2C_CCR(i2c) & 0xf000; /* Clear bits [11:0]. */
+	reg16 = GetRegister(&(I2C_CCR(i2c))) & 0xf000; /* Clear bits [11:0]. */  // REWRITE:
 	reg16 |= freq;
-	I2C_CCR(i2c) = reg16;
+	// I2C_CCR(i2c) = reg16;
+	SetRegister(&(I2C_CCR(i2c)), reg16);  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -282,7 +301,8 @@ number.
 
 void i2c_set_trise(uint32_t i2c, uint16_t trise)
 {
-	I2C_TRISE(i2c) = trise;
+	// I2C_TRISE(i2c) = trise;
+	SetRegister(&(I2C_TRISE(i2c)), trise);  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -296,7 +316,8 @@ send @ref i2c_rw.
 
 void i2c_send_7bit_address(uint32_t i2c, uint8_t slave, uint8_t readwrite)
 {
-	I2C_DR(i2c) = (uint8_t)((slave << 1) | readwrite);
+	// I2C_DR(i2c) = (uint8_t)((slave << 1) | readwrite);
+	SetRegister(&(I2C_DR(i2c)), (uint8_t)((slave << 1) | readwrite));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -306,7 +327,8 @@ void i2c_send_7bit_address(uint32_t i2c, uint8_t slave, uint8_t readwrite)
 */
 uint8_t i2c_get_data(uint32_t i2c)
 {
-	return I2C_DR(i2c) & 0xff;
+	// return I2C_DR(i2c) & 0xff;
+	return GetRegister(&(I2C_DR(i2c))) & 0xff;  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -317,7 +339,8 @@ uint8_t i2c_get_data(uint32_t i2c)
 */
 void i2c_enable_interrupt(uint32_t i2c, uint32_t interrupt)
 {
-	I2C_CR2(i2c) |= interrupt;
+	// I2C_CR2(i2c) |= interrupt;
+	SetRegister(&(I2C_CR2(i2c)), GetRegister(&(I2C_CR2(i2c))) | (interrupt));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -328,7 +351,8 @@ void i2c_enable_interrupt(uint32_t i2c, uint32_t interrupt)
 */
 void i2c_disable_interrupt(uint32_t i2c, uint32_t interrupt)
 {
-	I2C_CR2(i2c) &= ~interrupt;
+	// I2C_CR2(i2c) &= ~interrupt;
+	SetRegister(&(I2C_CR2(i2c)), GetRegister(&(I2C_CR2(i2c))) & (~interrupt));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -339,7 +363,8 @@ Enables acking of own 7/10 bit address
 */
 void i2c_enable_ack(uint32_t i2c)
 {
-	I2C_CR1(i2c) |= I2C_CR1_ACK;
+	// I2C_CR1(i2c) |= I2C_CR1_ACK;
+	SetRegister(&(I2C_CR1(i2c)), GetRegister(&(I2C_CR1(i2c))) | (I2C_CR1_ACK));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -350,7 +375,8 @@ Disables acking of own 7/10 bit address
 */
 void i2c_disable_ack(uint32_t i2c)
 {
-	I2C_CR1(i2c) &= ~I2C_CR1_ACK;
+	// I2C_CR1(i2c) &= ~I2C_CR1_ACK;
+	SetRegister(&(I2C_CR1(i2c)), GetRegister(&(I2C_CR1(i2c))) & (~I2C_CR1_ACK));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -361,7 +387,8 @@ Causes the I2C controller to NACK the reception of the next byte
 */
 void i2c_nack_next(uint32_t i2c)
 {
-	I2C_CR1(i2c) |= I2C_CR1_POS;
+	// I2C_CR1(i2c) |= I2C_CR1_POS;
+	SetRegister(&(I2C_CR1(i2c)), GetRegister(&(I2C_CR1(i2c))) | (I2C_CR1_POS));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -373,7 +400,8 @@ Causes the I2C controller to NACK the reception of the current byte
 */
 void i2c_nack_current(uint32_t i2c)
 {
-	I2C_CR1(i2c) &= ~I2C_CR1_POS;
+	// I2C_CR1(i2c) &= ~I2C_CR1_POS;
+	SetRegister(&(I2C_CR1(i2c)), GetRegister(&(I2C_CR1(i2c))) & (~I2C_CR1_POS));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -385,9 +413,11 @@ void i2c_nack_current(uint32_t i2c)
 void i2c_set_dutycycle(uint32_t i2c, uint32_t dutycycle)
 {
 	if (dutycycle == I2C_CCR_DUTY_DIV2) {
-		I2C_CCR(i2c) &= ~I2C_CCR_DUTY;
+		// I2C_CCR(i2c) &= ~I2C_CCR_DUTY;
+		SetRegister(&(I2C_CCR(i2c)), GetRegister(&(I2C_CCR(i2c))) & (~I2C_CCR_DUTY));  // REWRITE:
 	} else {
-		I2C_CCR(i2c) |= I2C_CCR_DUTY;
+		// I2C_CCR(i2c) |= I2C_CCR_DUTY;
+		SetRegister(&(I2C_CCR(i2c)), GetRegister(&(I2C_CCR(i2c))) | (I2C_CCR_DUTY));  // REWRITE:
 	}
 }
 
@@ -398,7 +428,8 @@ void i2c_set_dutycycle(uint32_t i2c, uint32_t dutycycle)
 */
 void i2c_enable_dma(uint32_t i2c)
 {
-	I2C_CR2(i2c) |= I2C_CR2_DMAEN;
+	// I2C_CR2(i2c) |= I2C_CR2_DMAEN;
+	SetRegister(&(I2C_CR2(i2c)), GetRegister(&(I2C_CR2(i2c))) | (I2C_CR2_DMAEN));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -408,7 +439,8 @@ void i2c_enable_dma(uint32_t i2c)
 */
 void i2c_disable_dma(uint32_t i2c)
 {
-	I2C_CR2(i2c) &= ~I2C_CR2_DMAEN;
+	// I2C_CR2(i2c) &= ~I2C_CR2_DMAEN;
+	SetRegister(&(I2C_CR2(i2c)), GetRegister(&(I2C_CR2(i2c))) & (~I2C_CR2_DMAEN));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -418,7 +450,8 @@ void i2c_disable_dma(uint32_t i2c)
 */
 void i2c_set_dma_last_transfer(uint32_t i2c)
 {
-	I2C_CR2(i2c) |= I2C_CR2_LAST;
+	// I2C_CR2(i2c) |= I2C_CR2_LAST;
+	SetRegister(&(I2C_CR2(i2c)), GetRegister(&(I2C_CR2(i2c))) | (I2C_CR2_LAST));  // REWRITE:
 }
 
 /*---------------------------------------------------------------------------*/
@@ -428,32 +461,40 @@ void i2c_set_dma_last_transfer(uint32_t i2c)
 */
 void i2c_clear_dma_last_transfer(uint32_t i2c)
 {
-	I2C_CR2(i2c) &= ~I2C_CR2_LAST;
+	// I2C_CR2(i2c) &= ~I2C_CR2_LAST;
+	SetRegister(&(I2C_CR2(i2c)), GetRegister(&(I2C_CR2(i2c))) & (~I2C_CR2_LAST));  // REWRITE:
 }
 
 static void i2c_write7_v1(uint32_t i2c, int addr, const uint8_t *data, size_t n)
 {
-	while ((I2C_SR2(i2c) & I2C_SR2_BUSY)) {
+	// while ((I2C_SR2(i2c) & I2C_SR2_BUSY)) {
+	while ((GetRegister(&(I2C_SR2(i2c))) & I2C_SR2_BUSY)) {  // REWRITE:
 	}
 
 	i2c_send_start(i2c);
 
 	/* Wait for the end of the start condition, master mode selected, and BUSY bit set */
-	while ( !( (I2C_SR1(i2c) & I2C_SR1_SB)
-		&& (I2C_SR2(i2c) & I2C_SR2_MSL)
-		&& (I2C_SR2(i2c) & I2C_SR2_BUSY) ));
+	// while ( !( (I2C_SR1(i2c) & I2C_SR1_SB)
+	while ( !( (GetRegister(&(I2C_SR1(i2c))) & I2C_SR1_SB)  // REWRITE:
+		// && (I2C_SR2(i2c) & I2C_SR2_MSL)
+		&& (GetRegister(&(I2C_SR2(i2c))) & I2C_SR2_MSL)  // REWRITE:
+		// && (I2C_SR2(i2c) & I2C_SR2_BUSY) ));
+		&& (GetRegister(&(I2C_SR2(i2c))) & I2C_SR2_BUSY) ));  // REWRITE:
 
 	i2c_send_7bit_address(i2c, addr, I2C_WRITE);
 
 	/* Waiting for address is transferred. */
-	while (!(I2C_SR1(i2c) & I2C_SR1_ADDR));
+	// while (!(I2C_SR1(i2c) & I2C_SR1_ADDR));
+	while (!(GetRegister(&(I2C_SR1(i2c))) & I2C_SR1_ADDR));  // REWRITE:
 
 	/* Clearing ADDR condition sequence. */
-	(void)I2C_SR2(i2c);
+	// (void)I2C_SR2(i2c);
+	(void)GetRegister(&(I2C_SR2(i2c)));  // REWRITE:
 
 	for (size_t i = 0; i < n; i++) {
 		i2c_send_data(i2c, data[i]);
-		while (!(I2C_SR1(i2c) & (I2C_SR1_BTF)));
+		// while (!(I2C_SR1(i2c) & (I2C_SR1_BTF)));
+		while (!(GetRegister(&(I2C_SR1(i2c))) & (I2C_SR1_BTF)));  // REWRITE:
 	}
 }
 
@@ -463,22 +504,28 @@ static void i2c_read7_v1(uint32_t i2c, int addr, uint8_t *res, size_t n)
 	i2c_enable_ack(i2c);
 
 	/* Wait for the end of the start condition, master mode selected, and BUSY bit set */
-	while ( !( (I2C_SR1(i2c) & I2C_SR1_SB)
-		&& (I2C_SR2(i2c) & I2C_SR2_MSL)
-		&& (I2C_SR2(i2c) & I2C_SR2_BUSY) ));
+	// while ( !( (I2C_SR1(i2c) & I2C_SR1_SB)
+	while ( !( (GetRegister(&(I2C_SR1(i2c))) & I2C_SR1_SB)  // REWRITE:
+		// && (I2C_SR2(i2c) & I2C_SR2_MSL)
+		&& (GetRegister(&(I2C_SR2(i2c))) & I2C_SR2_MSL)  // REWRITE:
+		// && (I2C_SR2(i2c) & I2C_SR2_BUSY) ));
+		&& (GetRegister(&(I2C_SR2(i2c))) & I2C_SR2_BUSY) ));  // REWRITE:
 
 	i2c_send_7bit_address(i2c, addr, I2C_READ);
 
 	/* Waiting for address is transferred. */
-	while (!(I2C_SR1(i2c) & I2C_SR1_ADDR));
+	// while (!(I2C_SR1(i2c) & I2C_SR1_ADDR));
+	while (!(GetRegister(&(I2C_SR1(i2c))) & I2C_SR1_ADDR));  // REWRITE:
 	/* Clearing ADDR condition sequence. */
-	(void)I2C_SR2(i2c);
+	// (void)I2C_SR2(i2c);
+	(void)GetRegister(&(I2C_SR2(i2c)));  // REWRITE:
 
 	for (size_t i = 0; i < n; ++i) {
 		if (i == n - 1) {
 			i2c_disable_ack(i2c);
 		}
-		while (!(I2C_SR1(i2c) & I2C_SR1_RxNE));
+		// while (!(I2C_SR1(i2c) & I2C_SR1_RxNE));
+		while (!(GetRegister(&(I2C_SR1(i2c))) & I2C_SR1_RxNE));  // REWRITE:
 		res[i] = i2c_get_data(i2c);
 	}
 	i2c_send_stop(i2c);

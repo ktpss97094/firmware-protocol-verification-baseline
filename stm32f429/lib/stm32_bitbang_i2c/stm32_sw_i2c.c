@@ -2,6 +2,8 @@
 #include "dwt_stm32_delay.h"
 #include "stm32_sw_i2c.h"
 
+#include "stm32_bitbang_i2c.h"
+
 //void I2C_bus_init(uint8_t scl_pin, uint8_t sda_pin, uint8_t port){
 //	  /*Configure GPIO pins : SW_I2C_SCL_Pin SW_I2C_SDA_Pin */
 //	  GPIO_InitStruct.Pin = SW_I2C_SCL_Pin|SW_I2C_SDA_Pin;

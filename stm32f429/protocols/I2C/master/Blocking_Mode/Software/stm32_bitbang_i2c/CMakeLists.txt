@@ -1,4 +1,4 @@
-project(i2c_master_blocking_sw_bitbang C)
+project(i2c_master_blocking_sw_stm32bitbangi2c C)
 
 set(CBMC_FLAGS "${CBMC_FLAGS} --unwindset DWT_Delay_us.0:2")
 

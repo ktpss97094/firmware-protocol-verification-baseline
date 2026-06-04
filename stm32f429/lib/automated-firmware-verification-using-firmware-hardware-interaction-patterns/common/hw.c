@@ -199,6 +199,20 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
       case GPIOJ_BASE:
       case GPIOK_BASE:
         switch (offset) {
+          case offsetof(GPIO_TypeDef, ODR):
+            __CPROVER_assert(
+              (value & ((uint32_t)SW_I2C_SDA_Pin)) ||
+              (!arbitration_lost)
+              , "read_back_verification (sw spec 1) violation"
+            );
+
+            __CPROVER_assert(
+              (value & ((uint32_t)SW_I2C_SCL_Pin)) ||
+              (!arbitration_lost_byte_end)
+              , "read_back_verification (sw spec 3) violation"
+            );
+            break;
+
           case offsetof(GPIO_TypeDef, BSRR):
             __CPROVER_assert(
               (value & ((uint32_t)SW_I2C_SDA_Pin)) ||

@@ -12,7 +12,7 @@ extern unsigned int nondet_uint(void);
 extern uint16_t CBMC_SIZE;
 __attribute__((weak)) extern uint32_t CBMC_TIMEOUT;
 
-bool prev_scl_out = true, arbitration_lost = false, arbitration_lost_byte_end = false;
+bool prev_scl_out = true, arbitration_lost = false, arbitration_lost_byte_end = false, wait_state = false;
 unsigned int bit_count = 0;
 
 I2C_TypeDef I2C1_Model, I2C2_Model, I2C3_Model;
@@ -140,6 +140,31 @@ uint32_t GetRegister(__IO uint32_t *reg_addr)
   }
 
   *reg_addr = output;
+
+  switch (base) {
+#if defined(SW_I2C_SCL_Pin) && defined(SW_I2C_SDA_Pin)
+    case GPIOA_BASE:
+    case GPIOB_BASE:
+    case GPIOC_BASE:
+    case GPIOD_BASE:
+    case GPIOE_BASE:
+    case GPIOF_BASE:
+    case GPIOG_BASE:
+    case GPIOH_BASE:
+    case GPIOI_BASE:
+    case GPIOJ_BASE:
+    case GPIOK_BASE:
+      switch (offset) {
+        case offsetof(GPIO_TypeDef, IDR):
+          if (wait_state && (output & SW_I2C_SCL_Pin)) {
+            wait_state = false;
+          }
+          
+          break;
+      }
+      break;
+#endif
+  }
   
   return output;
 }
@@ -211,6 +236,12 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
               (!arbitration_lost_byte_end)
               , "read_back_verification (sw spec 3) violation"
             );
+
+            __CPROVER_assert(
+              (value & ((uint32_t)SW_I2C_SCL_Pin)) ||
+              (!wait_state)
+              , "clock_stretching (spec 1) violation"
+            );
             break;
 
           case offsetof(GPIO_TypeDef, BSRR):
@@ -226,6 +257,13 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
               (!(value & ((uint32_t)SW_I2C_SCL_Pin << 16U))) || 
               (!arbitration_lost_byte_end)
               , "read_back_verification (sw spec 4) violation"
+            );
+
+            __CPROVER_assert(
+              (value & ((uint32_t)SW_I2C_SCL_Pin)) ||
+              (!(value & ((uint32_t)SW_I2C_SCL_Pin << 16U))) || 
+              (!wait_state)
+              , "clock_stretching (spec 2) violation"
             );
             break;
         }
@@ -254,6 +292,7 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
 #if defined(SW_I2C_SCL_Pin) && defined(SW_I2C_SDA_Pin)
           uint32_t idr = GetRegister((__IO uint32_t *)(base + offsetof(GPIO_TypeDef, IDR)));
           uint32_t odr = GetRegister((__IO uint32_t *)(base + offsetof(GPIO_TypeDef, ODR)));
+          bool scl_in = idr & SW_I2C_SCL_Pin;
           bool sda_in = idr & SW_I2C_SDA_Pin;
           bool scl_out = odr & SW_I2C_SCL_Pin, sda_out = odr & SW_I2C_SDA_Pin;
 
@@ -261,6 +300,8 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
             bit_count = (bit_count + 1) % 9;
 
             arbitration_lost = arbitration_lost || (sda_out && !sda_in);
+
+            wait_state = wait_state || (!scl_in);
 
             arbitration_lost_byte_end = arbitration_lost_byte_end || (arbitration_lost && bit_count == 0);
           }

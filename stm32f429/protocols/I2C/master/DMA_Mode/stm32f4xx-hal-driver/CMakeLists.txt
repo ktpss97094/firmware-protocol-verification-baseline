@@ -1,6 +1,6 @@
 project(i2c_master_dma_hal C)
 
-set(CBMC_FLAGS "${CBMC_FLAGS} --unwindset HAL_I2C_Master_Transmit_DMA.0:1")
+set(CBMC_FLAGS "${CBMC_FLAGS} --unwindset HAL_I2C_Master_Transmit_DMA.0:1,I2C_DMAAbort.0:1")
 
 file(GLOB CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/*.c")
 add_executable(${PROJECT_NAME}

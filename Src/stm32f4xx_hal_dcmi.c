@@ -215,6 +215,7 @@ __weak HAL_StatusTypeDef HAL_DCMI_Init(DCMI_HandleTypeDef *hdcmi)
     /* Init the low level hardware : GPIO, CLOCK, NVIC and DMA */
     HAL_DCMI_MspInit(hdcmi);
 #endif /* (USE_HAL_DCMI_REGISTER_CALLBACKS) */
+    HAL_DCMI_MspInit(hdcmi);
   }
 
   /* Change the DCMI state */

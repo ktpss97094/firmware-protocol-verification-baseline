@@ -4,7 +4,7 @@ project(firmware C)
 include(ExternalProject)
 
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib")
-set(CBMC_FLAGS "--arch arm --32 --no-standard-checks --drop-unused-functions --object-bits 9")
+set(CBMC_FLAGS "--arch arm --32 --no-standard-checks --drop-unused-functions --object-bits 10")
 
 add_library(cortex_m4_flags INTERFACE)
 target_compile_options(cortex_m4_flags INTERFACE ${MCU_FLAGS} -Wall -g)

@@ -3,9 +3,10 @@ project(firmware C)
 
 include(ExternalProject)
 
-set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib")
+set(ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(LIB_DIR "${ROOT_DIR}/lib")
 set(MCU_FLAGS --native-compiler ${GOTO_CC_NATIVE_COMPILER} -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -specs nosys.specs)
-set(CBMC_FLAGS "--no-standard-checks --drop-unused-functions --object-bits 10")
+set(CBMC_FLAGS "--no-standard-checks --drop-unused-functions --object-bits 13")
 
 add_library(cortex_m4_flags INTERFACE)
 target_compile_options(cortex_m4_flags INTERFACE ${MCU_FLAGS} -Wall -g)
@@ -98,11 +99,17 @@ function(add_firmware TARGET_NAME)
     )
 
     separate_arguments(CBMC_FLAGS_LIST NATIVE_COMMAND "${CBMC_FLAGS}")
+    list(JOIN CBMC_FLAGS_LIST "@@" CBMC_ARGS_ENCODED)
     add_custom_target(${TARGET_NAME}-verify
         DEPENDS ${TARGET_NAME}
-        COMMAND ${CBMC_TOOL} $<TARGET_FILE_DIR:${TARGET_NAME}>/${CMAKE_PROJECT_NAME}.out ${CBMC_FLAGS_LIST} \$$EXTRA_CBMC_FLAGS || true  # 加上 "|| true" 避免 verification failure 時 cbmc 回傳的錯誤碼被 cmake 接收，印出錯誤訊息
+        COMMAND ${CMAKE_COMMAND}
+            -DCBMC_TOOL=${CBMC_TOOL}
+            -DTARGET_FILE="$<TARGET_FILE_DIR:${TARGET_NAME}>/${CMAKE_PROJECT_NAME}.out"
+            "-DCBMC_ARGS_ENCODED=${CBMC_ARGS_ENCODED}"
+            -P "${ROOT_DIR}/cmake/scripts/cbmc_verify.cmake"
         USES_TERMINAL
     )
+
     add_custom_target(${TARGET_NAME}-show-loops
         DEPENDS ${TARGET_NAME}
         COMMAND ${CBMC_TOOL} $<TARGET_FILE_DIR:${TARGET_NAME}>/${CMAKE_PROJECT_NAME}.out ${CBMC_FLAGS_LIST} \$$EXTRA_CBMC_FLAGS --show-loops

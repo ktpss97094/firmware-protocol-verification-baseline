@@ -18,7 +18,7 @@
 
 ```sh
 cd <mcu directory>
-cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/cbmc.cmake -B build
+cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchains/cbmc.cmake -B build
 ```
 
 ## Compile

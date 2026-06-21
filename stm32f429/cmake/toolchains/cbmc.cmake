@@ -1,0 +1,8 @@
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR cortex-m4)
+
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
+find_program(CMAKE_C_COMPILER goto-cc REQUIRED)
+find_program(CBMC_TOOL cbmc REQUIRED)
+find_program(GOTO_CC_NATIVE_COMPILER arm-none-eabi-gcc REQUIRED)

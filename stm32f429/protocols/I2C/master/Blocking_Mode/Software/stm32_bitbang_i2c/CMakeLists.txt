@@ -1,7 +1,5 @@
 project(i2c_master_blocking_sw_stm32bitbangi2c C)
 
-set(CBMC_FLAGS "${CBMC_FLAGS} --unwindset DWT_Delay_us.0:2")
-
 file(GLOB CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/*.c")
 add_executable(${PROJECT_NAME}
     ${CORE_SOURCES}
@@ -16,4 +14,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc"
 )
 
-add_firmware(${PROJECT_NAME})
+add_firmware(${PROJECT_NAME}
+    CBMC_ARGS
+        --unwindset DWT_Delay_us.0:2
+)

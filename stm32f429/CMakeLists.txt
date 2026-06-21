@@ -6,7 +6,7 @@ include(ExternalProject)
 set(ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(LIB_DIR "${ROOT_DIR}/lib")
 set(MCU_FLAGS --native-compiler ${GOTO_CC_NATIVE_COMPILER} -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -specs nosys.specs)
-set(CBMC_FLAGS "--no-standard-checks --drop-unused-functions --object-bits 13")
+set(CBMC_DEFAULT_ARGS --no-standard-checks --drop-unused-functions --object-bits 13)
 
 add_library(cortex_m4_flags INTERFACE)
 target_compile_options(cortex_m4_flags INTERFACE ${MCU_FLAGS} -Wall -g)
@@ -93,27 +93,31 @@ target_link_libraries(libopencm3_automated_firmware_verification_using_firmware_
 )
 
 function(add_firmware TARGET_NAME)
+    cmake_parse_arguments(PARSE_ARGV 1 FIRMWARE "" "" "CBMC_ARGS")
+
     set_target_properties(${TARGET_NAME} PROPERTIES 
         OUTPUT_NAME ${CMAKE_PROJECT_NAME}
         SUFFIX ".out"
     )
 
-    separate_arguments(CBMC_FLAGS_LIST NATIVE_COMMAND "${CBMC_FLAGS}")
-    list(JOIN CBMC_FLAGS_LIST "@@" CBMC_ARGS_ENCODED)
+    set(CBMC_TARGET_ARGS ${CBMC_DEFAULT_ARGS} ${FIRMWARE_CBMC_ARGS})
+
     add_custom_target(${TARGET_NAME}-verify
         DEPENDS ${TARGET_NAME}
         COMMAND ${CMAKE_COMMAND}
-            -DCBMC_TOOL=${CBMC_TOOL}
-            -DTARGET_FILE="$<TARGET_FILE_DIR:${TARGET_NAME}>/${CMAKE_PROJECT_NAME}.out"
-            "-DCBMC_ARGS_ENCODED=${CBMC_ARGS_ENCODED}"
+            "-DCBMC_TOOL=${CBMC_TOOL}"
+            "-DTARGET_FILE=$<TARGET_FILE:${TARGET_NAME}>"
+            "-DCBMC_ARGS=${CBMC_TARGET_ARGS}"
             -P "${ROOT_DIR}/cmake/scripts/cbmc_verify.cmake"
         USES_TERMINAL
+        VERBATIM
     )
 
     add_custom_target(${TARGET_NAME}-show-loops
         DEPENDS ${TARGET_NAME}
-        COMMAND ${CBMC_TOOL} $<TARGET_FILE_DIR:${TARGET_NAME}>/${CMAKE_PROJECT_NAME}.out ${CBMC_FLAGS_LIST} \$$EXTRA_CBMC_FLAGS --show-loops
+        COMMAND "${CBMC_TOOL}" "$<TARGET_FILE:${TARGET_NAME}>" ${CBMC_TARGET_ARGS} --show-loops
         USES_TERMINAL
+        VERBATIM
     )
 
 endfunction()

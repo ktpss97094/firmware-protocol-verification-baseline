@@ -1,8 +1,7 @@
-string(REPLACE "@@" ";" CBMC_ARGS "${CBMC_ARGS_ENCODED}")
 separate_arguments(EXTRA_ARGS NATIVE_COMMAND "$ENV{EXTRA_CBMC_FLAGS}")
 
 execute_process(
-    COMMAND ${CBMC_TOOL} ${TARGET_FILE} ${CBMC_ARGS} ${EXTRA_ARGS}
+    COMMAND "${CBMC_TOOL}" "${TARGET_FILE}" ${CBMC_ARGS} ${EXTRA_ARGS}
     RESULT_VARIABLE exit_code
 )
 

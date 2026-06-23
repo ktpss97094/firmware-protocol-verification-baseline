@@ -12,7 +12,7 @@ extern unsigned int nondet_uint(void);
 extern uint16_t CBMC_SIZE;
 __attribute__((weak)) extern uint32_t CBMC_TIMEOUT;
 
-bool prev_scl_out = true, arbitration_lost = false, arbitration_lost_byte_end = false, wait_state = false;
+bool prev_scl_in = true, prev_sda_in = true, prev_scl_out = true, prev_sda_out = true, arbitration_lost = false, arbitration_lost_byte_end = false, wait_state = false;
 unsigned int bit_count = 0;
 
 I2C_TypeDef I2C1_Model, I2C2_Model, I2C3_Model;
@@ -156,9 +156,22 @@ uint32_t GetRegister(__IO uint32_t *reg_addr)
     case GPIOK_BASE:
       switch (offset) {
         case offsetof(GPIO_TypeDef, IDR):
-          if (wait_state && (output & SW_I2C_SCL_Pin)) {
+          bool scl_in = output & SW_I2C_SCL_Pin;
+          bool sda_in = output & SW_I2C_SDA_Pin;
+          
+          bool is_stop_condition = prev_scl_in && scl_in && (!prev_sda_in) && sda_in;
+
+          if (is_stop_condition) {
+            arbitration_lost = false;
+            arbitration_lost_byte_end = false;
+          }
+
+          if (wait_state && scl_in) {
             wait_state = false;
           }
+
+          prev_scl_in = scl_in;
+          prev_sda_in = sda_in;
           
           break;
       }
@@ -294,19 +307,36 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
           uint32_t odr = GetRegister((__IO uint32_t *)(base + offsetof(GPIO_TypeDef, ODR)));
           bool scl_in = idr & SW_I2C_SCL_Pin;
           bool sda_in = idr & SW_I2C_SDA_Pin;
-          bool scl_out = odr & SW_I2C_SCL_Pin, sda_out = odr & SW_I2C_SDA_Pin;
+          bool scl_out = odr & SW_I2C_SCL_Pin;
+          bool sda_out = odr & SW_I2C_SDA_Pin;
 
-          if (!prev_scl_out && scl_out) {
-            bit_count = (bit_count + 1) % 9;
+          bool is_rising_edge = (!prev_scl_out) && scl_out;
+          bool is_falling_edge = prev_scl_out && (!scl_out);
+          bool is_start_condition = prev_scl_out && scl_out && prev_sda_out && (!sda_out);
 
-            arbitration_lost = arbitration_lost || (sda_out && !sda_in);
+          if (is_start_condition) {
+            bit_count = 0;
+          }
+          else {
+            if (is_rising_edge) {
+              bit_count = (bit_count + 1) % 9;
+            }
+          }
 
-            wait_state = wait_state || (!scl_in);
+          if (is_rising_edge) {
+            arbitration_lost = arbitration_lost || (sda_out && (!sda_in));
+          }
 
-            arbitration_lost_byte_end = arbitration_lost_byte_end || (arbitration_lost && bit_count == 0);
+          if (is_rising_edge && (!scl_in)) {
+            wait_state = true;
+          }
+
+          if (is_falling_edge) {
+            arbitration_lost_byte_end = arbitration_lost_byte_end || (arbitration_lost && (bit_count == 0));
           }
 
           prev_scl_out = scl_out;
+          prev_sda_out = sda_out;
 #endif
           break;
       }

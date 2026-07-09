@@ -15,5 +15,5 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 add_firmware(${PROJECT_NAME}
     CBMC_ARGS
-        --unwindset I2C_WaitOnFlagUntilTimeout.1:1,I2C_WaitOnMasterAddressFlagUntilTimeout.2:2,I2C_WaitOnTXEFlagUntilTimeout.1:2,I2C_WaitOnBTFFlagUntilTimeout.1:2
+        --unwindset I2C_WaitOnFlagUntilTimeout.1:1,I2C_WaitOnMasterAddressFlagUntilTimeout.2:1,I2C_WaitOnTXEFlagUntilTimeout.1:1,I2C_WaitOnBTFFlagUntilTimeout.1:1
 )

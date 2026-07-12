@@ -139,6 +139,7 @@ uint32_t GetRegister(__IO uint32_t *reg_addr)
       break;
   }
 
+  *(uint32_t *)((uint8_t *)model_ptr + offset) = output;
   *reg_addr = output;
 
   switch (base) {
@@ -285,6 +286,7 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
     }
 
     *(uint32_t *)((uint8_t *)model_ptr + offset) = value;
+    *reg_addr = value;
   }
 
   switch (base) {

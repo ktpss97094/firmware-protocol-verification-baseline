@@ -18,7 +18,7 @@ uint32_t stub_READ_BIT(__IO uint32_t *REG_addr, uint32_t BIT)
 
 FlagStatus stub_HAL_I2C_GET_FLAG(I2C_HandleTypeDef *__HANDLE__, uint32_t __FLAG__)
 {
-  return (((uint8_t)((__FLAG__) >> 16U)) == 0x01U) ? (((GetRegister(&((__HANDLE__)->Instance->SR1)) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET) : (((GetRegister(&((__HANDLE__)->Instance->SR1)) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET);
+  return (((uint8_t)((__FLAG__) >> 16U)) == 0x01U) ? (((GetRegister(&((__HANDLE__)->Instance->SR1)) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET) : (((GetRegister(&((__HANDLE__)->Instance->SR2)) & ((__FLAG__) & I2C_FLAG_MASK)) == ((__FLAG__) & I2C_FLAG_MASK)) ? SET : RESET);
 }
 
 void stub_HAL_I2C_CLEAR_ADDRFLAG(I2C_HandleTypeDef *__HANDLE__)

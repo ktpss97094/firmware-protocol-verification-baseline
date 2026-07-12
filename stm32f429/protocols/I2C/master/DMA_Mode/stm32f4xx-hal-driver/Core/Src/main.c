@@ -24,6 +24,7 @@
 #include "stm32f4xx_it.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -110,22 +111,43 @@ int main(void)
   /* FUV */
   HAL_StatusTypeDef result = HAL_I2C_Master_Transmit_DMA(&hi2c1, nondet_uint() & 0xFFFF, data, CBMC_SIZE);
   
-  const int B_F = 3 + 1;  // 3: SB, ADDR, BTF、1: DMA TC
+  const int B_F = 4 + 1;  // 3: SB, ADDR, (ADD10), BTF、1: DMA TC
   for (int k = 0; k < B_F; k++) {
-    if (hi2c1.State == HAL_I2C_STATE_READY || hi2c1.ErrorCode != HAL_I2C_ERROR_NONE) {
-      break;
-    }
-
-    int i = nondet_uint();
-    __CPROVER_assume(i >= 0 && i <= 2);
-    if (i == 0) {
-      I2C1_EV_IRQHandler();
-    }
-    else if (i == 1) {
-      I2C1_ER_IRQHandler();
-    }
-    else {
+    bool itevten = hi2c1.Instance->CR2 & I2C_CR2_ITEVTEN;
+    bool itbufen = hi2c1.Instance->CR2 & I2C_CR2_ITBUFEN;
+    bool iterren = hi2c1.Instance->CR2 & I2C_CR2_ITERREN;
+    uint32_t s6cr = hdma_i2c1_tx.Instance->CR;
+    uint32_t s6fcr = hdma_i2c1_tx.Instance->FCR;
+    
+    if (
+      (s6cr & DMA_SxCR_HTIE) ||
+      (s6cr & DMA_SxCR_TCIE) ||
+      (s6cr & DMA_SxCR_TEIE) ||
+      (s6fcr & DMA_SxFCR_FEIE) ||
+      (s6cr & DMA_SxCR_DMEIE)
+    ) {
       DMA1_Stream6_IRQHandler();
+    }
+    else if (
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_SB)) ||
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_ADDR)) ||
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_ADD10)) ||
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_STOPF)) ||
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_BTF)) ||
+      (itevten && itbufen && (hi2c1.Instance->SR1 & I2C_SR1_TXE)) ||
+      (itevten && itbufen && (hi2c1.Instance->SR1 & I2C_SR1_RXNE))
+    ) {
+      I2C1_EV_IRQHandler();
+    } else if (
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_BERR)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_ARLO)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_AF)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_OVR)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_PECERR)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_TIMEOUT)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_SMBALERT))
+    ) {
+      I2C1_ER_IRQHandler();
     }
   }
   /* USER CODE END 2 */

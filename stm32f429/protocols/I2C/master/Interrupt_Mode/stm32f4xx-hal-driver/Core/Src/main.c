@@ -105,16 +105,30 @@ int main(void)
   /* FUV */
   HAL_StatusTypeDef result = HAL_I2C_Master_Transmit_IT(&hi2c1, nondet_uint() & 0xFFFF, data, CBMC_SIZE);
 
-  const int B_F = CBMC_SIZE + 3;
-  for (int k = 0; k < B_F; k++) {
-    if (hi2c1.State == HAL_I2C_STATE_READY || hi2c1.ErrorCode != HAL_I2C_ERROR_NONE) {  // Ahn 的作法需要 manually 指定結束條件
-      break;
-    }
+  for (int k = 0; k < CBMC_SIZE + 4; k++) {
+    bool itevten = hi2c1.Instance->CR2 & I2C_CR2_ITEVTEN;
+    bool itbufen = hi2c1.Instance->CR2 & I2C_CR2_ITBUFEN;
+    bool iterren = hi2c1.Instance->CR2 & I2C_CR2_ITERREN;
 
-    if (nondet_bool()) {
+    if (
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_SB)) ||
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_ADDR)) ||
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_ADD10)) ||
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_STOPF)) ||
+      (itevten && (hi2c1.Instance->SR1 & I2C_SR1_BTF)) ||
+      (itevten && itbufen && (hi2c1.Instance->SR1 & I2C_SR1_TXE)) ||
+      (itevten && itbufen && (hi2c1.Instance->SR1 & I2C_SR1_RXNE))
+    ) {
       I2C1_EV_IRQHandler();
-    }
-    else {
+    } else if (
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_BERR)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_ARLO)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_AF)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_OVR)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_PECERR)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_TIMEOUT)) ||
+      (iterren && (hi2c1.Instance->SR1 & I2C_SR1_SMBALERT))
+    ) {
       I2C1_ER_IRQHandler();
     }
   }

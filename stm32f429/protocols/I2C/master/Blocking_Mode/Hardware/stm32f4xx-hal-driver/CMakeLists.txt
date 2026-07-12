@@ -15,5 +15,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 add_firmware(${PROJECT_NAME}
     CBMC_ARGS
+        # encoding bound
+        --unwindset main.0:4,HAL_I2C_Master_Transmit.1:4
+        # targeted loop-bounding
         --unwindset I2C_WaitOnFlagUntilTimeout.1:1,I2C_WaitOnMasterAddressFlagUntilTimeout.2:1,I2C_WaitOnTXEFlagUntilTimeout.1:1,I2C_WaitOnBTFFlagUntilTimeout.1:1
 )

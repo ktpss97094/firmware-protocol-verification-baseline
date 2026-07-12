@@ -59,7 +59,7 @@ extern unsigned int nondet_uint(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint16_t CBMC_SIZE = 0;
+uint16_t CBMC_SIZE = nondet_uint();
 /* USER CODE END 0 */
 
 /**
@@ -96,6 +96,7 @@ int main(void)
 //   MX_GPIO_Init();
 //   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  __CPROVER_assume(0 <= CBMC_SIZE && CBMC_SIZE <= 3);
   uint8_t data[CBMC_SIZE];
   for (int i = 0; i < CBMC_SIZE; i++) {
       data[i] = nondet_uint() & 0xFF;

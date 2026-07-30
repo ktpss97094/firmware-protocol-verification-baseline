@@ -1,5 +1,0 @@
-doc/html/*
-doc/xml/*
-doc/warnings_nrfx.txt
-bsp/*/
-!bsp/stable

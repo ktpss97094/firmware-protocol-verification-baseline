@@ -1,6 +1,3 @@
-[submodule "nrf52840/lib/CMSIS_5"]
-	path = nrf52840/lib/CMSIS_5
-	url = https://github.com/ARM-software/CMSIS_5.git
 [submodule "stm32f429/lib/CMSIS_5"]
 	path = stm32f429/lib/CMSIS_5
 	url = https://github.com/ARM-software/CMSIS_5.git

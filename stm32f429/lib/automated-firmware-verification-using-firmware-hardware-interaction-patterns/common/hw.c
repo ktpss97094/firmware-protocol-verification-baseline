@@ -201,14 +201,14 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
               !(value & I2C_CR1_START) ||
               !(GetRegister(base + offsetof(I2C_TypeDef, SR2)) & I2C_SR2_MSL) ||
               !(GetRegister(base + offsetof(I2C_TypeDef, SR1)) & I2C_SR1_ARLO)
-              , "read_back_verification (hw spec 1) violation"
+              , "arbitration (hw spec 1) violation"
             );
 
             __CPROVER_assert(
               !(value & I2C_CR1_STOP) ||
               !(GetRegister(base + offsetof(I2C_TypeDef, SR2)) & I2C_SR2_MSL) ||
               !(GetRegister(base + offsetof(I2C_TypeDef, SR1)) & I2C_SR1_ARLO)
-              , "read_back_verification (hw spec 3) violation"
+              , "arbitration (hw spec 3) violation"
             );
 
             break;
@@ -217,7 +217,7 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
             __CPROVER_assert(
               !(GetRegister(base + offsetof(I2C_TypeDef, SR2)) & I2C_SR2_MSL) ||
               !(GetRegister(base + offsetof(I2C_TypeDef, SR1)) & I2C_SR1_ARLO)
-              , "read_back_verification (hw spec 2) violation"
+              , "arbitration (hw spec 2) violation"
             );
 
           break;
@@ -242,13 +242,13 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
             __CPROVER_assert(
               (value & ((uint32_t)SW_I2C_SDA_Pin)) ||
               (!arbitration_lost)
-              , "read_back_verification (sw spec 1) violation"
+              , "arbitration (sw spec 1) violation"
             );
 
             __CPROVER_assert(
               (value & ((uint32_t)SW_I2C_SCL_Pin)) ||
               (!arbitration_lost_byte_end)
-              , "read_back_verification (sw spec 3) violation"
+              , "arbitration (sw spec 3) violation"
             );
 
             __CPROVER_assert(
@@ -263,14 +263,14 @@ void SetRegister(__IO uint32_t *reg_addr, uint32_t value)
               (value & ((uint32_t)SW_I2C_SDA_Pin)) ||
               (!(value & ((uint32_t)SW_I2C_SDA_Pin << 16U))) || 
               (!arbitration_lost)
-              , "read_back_verification (sw spec 2) violation"
+              , "arbitration (sw spec 2) violation"
             );
 
             __CPROVER_assert(
               (value & ((uint32_t)SW_I2C_SCL_Pin)) ||
               (!(value & ((uint32_t)SW_I2C_SCL_Pin << 16U))) || 
               (!arbitration_lost_byte_end)
-              , "read_back_verification (sw spec 4) violation"
+              , "arbitration (sw spec 4) violation"
             );
 
             __CPROVER_assert(
